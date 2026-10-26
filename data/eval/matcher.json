@@ -1,0 +1,116 @@
+{
+ "train_pairs": 3000,
+ "test_pairs": 7314,
+ "test_same_person": 2442,
+ "test_spelled_differently": 1453,
+ "tabpfn_seconds": 394.0,
+ "methods": {
+  "Ctrl+F (what families do today)": {
+   "all": {
+    "found": 0.581,
+    "precision": 0.866,
+    "false_alarms": 220,
+    "tp": 1420,
+    "missed": 1022
+   },
+   "spelled_differently": {
+    "found": 0.297,
+    "precision": 0.662,
+    "false_alarms": 220,
+    "tp": 431,
+    "missed": 1022
+   }
+  },
+  "Same name after spelling rules": {
+   "all": {
+    "found": 0.634,
+    "precision": 0.879,
+    "false_alarms": 214,
+    "tp": 1548,
+    "missed": 894
+   },
+   "spelled_differently": {
+    "found": 0.385,
+    "precision": 0.723,
+    "false_alarms": 214,
+    "tp": 559,
+    "missed": 894
+   }
+  },
+  "Fuzzy text match (80% similar)": {
+   "all": {
+    "found": 0.829,
+    "precision": 0.818,
+    "false_alarms": 451,
+    "tp": 2024,
+    "missed": 418
+   },
+   "spelled_differently": {
+    "found": 0.712,
+    "precision": 0.697,
+    "false_alarms": 451,
+    "tp": 1035,
+    "missed": 418
+   }
+  },
+  "Logistic regression on features": {
+   "all": {
+    "found": 0.878,
+    "precision": 0.878,
+    "false_alarms": 297,
+    "tp": 2144,
+    "missed": 298
+   },
+   "spelled_differently": {
+    "found": 0.807,
+    "precision": 0.798,
+    "false_alarms": 297,
+    "tp": 1172,
+    "missed": 281
+   }
+  },
+  "TabPFN on features": {
+   "all": {
+    "found": 0.901,
+    "precision": 0.886,
+    "false_alarms": 282,
+    "tp": 2201,
+    "missed": 241
+   },
+   "spelled_differently": {
+    "found": 0.845,
+    "precision": 0.813,
+    "false_alarms": 282,
+    "tp": 1228,
+    "missed": 225
+   }
+  }
+ },
+ "tabpfn_bands": [
+  {
+   "band": "0.9-1.0",
+   "pairs": 1425,
+   "same_person": 0.98
+  },
+  {
+   "band": "0.7-0.9",
+   "pairs": 759,
+   "same_person": 0.808
+  },
+  {
+   "band": "0.5-0.7",
+   "pairs": 299,
+   "same_person": 0.642
+  },
+  {
+   "band": "0.3-0.5",
+   "pairs": 294,
+   "same_person": 0.371
+  },
+  {
+   "band": "0.0-0.3",
+   "pairs": 4537,
+   "same_person": 0.029
+  }
+ ]
+}

@@ -1,9 +1,11 @@
 """Download every State Bank unclaimed-deposit list in data/sbp-sources.json into raw/<year>/.
 
-Polite: one file at a time, skips files already on disk. Year comes from the page section,
+Three files at a time, retries, writes to .part and renames so a broken download is never
+mistaken for a finished one. Skips files already on disk. Year comes from the page section,
 or from the file name when the page didn't label it.
 """
 import json, os, re, sys, time, urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130"
@@ -14,28 +16,36 @@ def year_of(row):
     m = re.search(r"(19|20)\d\d", row["url"].rsplit("/", 1)[-1])
     return m.group(0) if m else "unknown"
 
-def main():
+def sources():
     raw = json.load(open(os.path.join(ROOT, "data", "sbp-sources.json"), encoding="utf8"))
-    rows = json.loads(raw) if isinstance(raw, str) else raw
-    ok = fail = 0
-    for row in rows:
-        y = year_of(row)
-        name = row["url"].rsplit("/", 1)[-1]
-        dest = os.path.join(ROOT, "raw", y, name)
-        if os.path.exists(dest) and os.path.getsize(dest) > 0:
-            ok += 1
-            continue
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
+    return json.loads(raw) if isinstance(raw, str) else raw
+
+def fetch(row):
+    y = year_of(row)
+    name = row["url"].rsplit("/", 1)[-1]
+    dest = os.path.join(ROOT, "raw", y, name)
+    if os.path.exists(dest) and os.path.getsize(dest) > 0:
+        return True
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    for attempt in range(4):
         try:
             req = urllib.request.Request(row["url"], headers={"User-Agent": UA})
-            with urllib.request.urlopen(req, timeout=120) as r, open(dest, "wb") as f:
-                f.write(r.read())
-            ok += 1
+            with urllib.request.urlopen(req, timeout=300) as r, open(dest + ".part", "wb") as f:
+                while chunk := r.read(1 << 16):
+                    f.write(chunk)
+            os.replace(dest + ".part", dest)
+            return True
         except Exception as e:
-            fail += 1
-            print("FAIL", y, row["url"], e, flush=True)
-        time.sleep(0.3)
-    print(f"done: {ok} ok, {fail} failed", flush=True)
+            err = e
+            time.sleep(3 * (attempt + 1))
+    print("FAIL", y, row["url"], err, flush=True)
+    return False
+
+def main():
+    rows = sources()
+    with ThreadPoolExecutor(3) as pool:
+        results = list(pool.map(fetch, rows))
+    print(f"done: {sum(results)} ok, {len(results) - sum(results)} failed", flush=True)
 
 if __name__ == "__main__":
     sys.exit(main())

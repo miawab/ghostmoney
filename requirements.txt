@@ -1,0 +1,7 @@
+fastapi==0.162.0
+uvicorn==0.54.0
+httpx==0.28.1
+pandas==2.3.3
+scikit-learn==1.9.0
+tabpfn-client==0.6.1
+sentry-sdk[fastapi]==2.73.0

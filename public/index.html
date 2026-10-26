@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ghost Money</title>
+<meta name="description" content="Find money your late relatives left in Pakistani banks. Searches every State Bank of Pakistan unclaimed-deposit list, 2003-2025, with open models. The name you type never leaves your browser.">
+<meta property="og:title" content="Ghost Money">
+<meta property="og:description" content="Find what your elders left behind: every State Bank of Pakistan unclaimed-deposit list, searched in your browser.">
+<link rel="icon" href="candle.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Source+Sans+3:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="papel" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="brand" href="./"><img src="candle.svg" alt="" width="22" height="22"> Ghost Money</a>
+  <button id="gemmaPill" class="pill" type="button" title="Where Gemma runs">Gemma: checking…</button>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="urdu hero-ur" lang="ur" dir="rtl">جو وہ پیچھے چھوڑ گئے</p>
+    <h1>Find what your elders <em>left behind</em>.</h1>
+    <p class="lede">When a bank account sits untouched for years, the bank hands the money to the State Bank of Pakistan, which publishes the names. Most families never look. Ghost Money searches every list from 2003 to 2025 for someone you've lost, however the clerk spelled their name.</p>
+    <dl class="stats" id="stats">
+      <div><dt>forgotten accounts of people</dt><dd id="sPeople">…</dd></div>
+      <div><dt>waiting to be claimed</dt><dd id="sMoney">…</dd></div>
+      <div><dt>yearly lists searched</dt><dd id="sYears">…</dd></div>
+    </dl>
+  </section>
+
+  <section class="card search" aria-labelledby="searchTitle">
+    <h2 id="searchTitle">Who are we remembering?</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="form" id="tabForm">Fill in what you know</button>
+      <button role="tab" aria-selected="false" data-tab="story" id="tabStory">Describe them in your own words</button>
+    </div>
+
+    <form id="form" autocomplete="off">
+      <div class="panel" data-panel="form">
+        <label>Their name <span class="hint">in English or اردو, as on their CNIC if you know it</span>
+          <input name="name" id="fName" required placeholder="e.g. Ghulam Rasool" maxlength="80"></label>
+        <div class="row2">
+          <label>Father's or husband's name <span class="hint">optional</span>
+            <input name="father" id="fFather" placeholder="e.g. Allah Ditta" maxlength="80"></label>
+          <label>City or province <span class="hint">optional</span>
+            <input name="city" id="fCity" list="cities" placeholder="e.g. Sahiwal" maxlength="40"></label>
+        </div>
+        <label>CNIC or old NIC number <span class="hint">optional · checked inside your browser, never sent anywhere</span>
+          <input name="cnic" id="fCnic" inputmode="numeric" placeholder="35202-1234567-1" maxlength="20"></label>
+      </div>
+      <div class="panel" data-panel="story" hidden>
+        <label>Tell Gemma about them <span class="hint">any language: English, Urdu, Roman Urdu</span>
+          <textarea id="fStory" rows="4" maxlength="1200" placeholder="Mere dada, Ghulam Rasool, Sahiwal mein railway mein kaam karte thay. Unke walid ka naam Allah Ditta tha. 2009 mein intiqal hua."></textarea></label>
+        <p class="hint" id="storyHint">Gemma turns this into search fields. It runs on this device, so the story stays here.</p>
+      </div>
+      <div class="actions">
+        <button class="go" type="submit" id="goBtn"><span>Search the lists</span></button>
+        <p class="privacy">The name never leaves your browser. The page downloads small pieces of the index that thousands of names share, and matches them here.</p>
+      </div>
+    </form>
+  </section>
+
+  <section id="run" class="card run" hidden aria-live="polite">
+    <h2>Searching</h2>
+    <ol id="steps" class="steps"></ol>
+  </section>
+
+  <section id="results" hidden>
+    <div class="summary card" id="summary"></div>
+    <div id="cards" class="cards"></div>
+    <details id="weaker" class="weaker" hidden><summary></summary><div class="cards" id="weakCards"></div></details>
+  </section>
+
+  <section class="card guide" id="guide">
+    <h2>How heirs claim the money</h2>
+    <p class="hint">From the State Bank's own procedure page. Banks may ask for more, so call the branch first.</p>
+    <ol class="claim">
+      <li><b>Go to the branch</b> where the account was, or the nearest branch of the same bank. If the bank merged into another, go to the bank that took it over.</li>
+      <li><b>Take an application</b> signed by the heirs, with the account details from the list, and copies of everyone's CNIC.</li>
+      <li><b>Under Rs 100,000:</b> an indemnity bond on Rs 100 stamp paper signed by <em>all</em> legal heirs, with the death certificate. No court needed.</li>
+      <li><b>Rs 100,000 or more:</b> a succession certificate for the deceased person's accounts.</li>
+      <li><b>The branch sends it on</b> to the State Bank, which checks it and returns the money to the bank to pay the heirs.</li>
+    </ol>
+    <p class="source">Sources: <a href="https://www.sbp.org.pk/our-subsidiaries/sbp-bsc/procedure-for-unclaimed-deposit-refund" target="_blank" rel="noopener">SBP refund procedure</a> · <a href="https://www.sbp.org.pk/circulars/cpd-circular-letter-no-1-of-2012" target="_blank" rel="noopener">CPD Circular Letter 1 of 2012</a> · <a href="https://www.sbp.org.pk/sbp-bsc/year-wise-unclaimed-deposit" target="_blank" rel="noopener">the lists</a></p>
+  </section>
+
+  <section class="card candles" id="candles" hidden>
+    <h2>Remembered here</h2>
+    <p class="hint">Kept only in this browser.</p>
+    <ul id="candleList"></ul>
+  </section>
+
+  <section class="how">
+    <h2>How it works</h2>
+    <div class="how-grid">
+      <div><h3>The lists</h3><p>782 Excel and CSV files from the State Bank, one per bank per year, cleaned into one index. Rows shared by a CNIC show the same person written many ways.</p></div>
+      <div><h3>Your device</h3><p>Your browser works out the spelling keys for the name (RASOOL, RASUL and رسول all become RSL), downloads only those pieces, and compares every row there.</p></div>
+      <div><h3>TabPFN</h3><p>An open tabular model scores each row from twelve numbers, like how many name parts match and how rare the name is. It never sees the names.</p></div>
+      <div><h3>Gemma</h3><p>Google's open model reads your description, reviews the best matches, and drafts the claim letter. It runs on your own machine, in this tab or through Ollama.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Data: State Bank of Pakistan unclaimed-deposit lists, public. Not affiliated with the State Bank or any bank. Always confirm with the branch.</p>
+  <p><a href="https://github.com/miawab/ghostmoney" target="_blank" rel="noopener">Source code (MIT)</a></p>
+</footer>
+
+<datalist id="cities"></datalist>
+<template id="cardTpl">
+  <article class="acct">
+    <div class="acct-head">
+      <div><h3 class="nm"></h3><p class="where"></p></div>
+      <div class="amt"></div>
+    </div>
+    <div class="meter" role="img"><span></span></div>
+    <p class="verdict"></p>
+    <dl class="facts"></dl>
+    <p class="gemma" hidden></p>
+    <div class="acct-actions">
+      <button type="button" class="b-branch">Where to claim today</button>
+      <button type="button" class="b-letter">Draft the claim letter</button>
+      <button type="button" class="b-not ghost">Not them</button>
+    </div>
+    <div class="extra" hidden></div>
+  </article>
+</template>
+<script type="module" src="app.js"></script>
+</body>
+</html>

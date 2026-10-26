@@ -7,3 +7,8 @@ private/
 __pycache__/
 .playwright-mcp/
 CLAUDE.md
+data/pairs/
+data/cache/
+data/eval/*.csv
+data/parse-report*.json
+tests/vectors.json
