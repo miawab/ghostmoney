@@ -1,116 +1,116 @@
 {
  "train_pairs": 3000,
- "test_pairs": 7314,
- "test_same_person": 2442,
- "test_spelled_differently": 1453,
- "tabpfn_seconds": 394.0,
+ "test_pairs": 11036,
+ "test_same_person": 2435,
+ "test_spelled_differently": 1488,
+ "tabpfn_seconds": 592.8,
  "methods": {
   "Ctrl+F (what families do today)": {
    "all": {
-    "found": 0.581,
-    "precision": 0.866,
-    "false_alarms": 220,
-    "tp": 1420,
-    "missed": 1022
+    "found": 0.575,
+    "precision": 0.498,
+    "false_alarms": 1409,
+    "tp": 1400,
+    "missed": 1035
    },
    "spelled_differently": {
-    "found": 0.297,
-    "precision": 0.662,
-    "false_alarms": 220,
-    "tp": 431,
-    "missed": 1022
+    "found": 0.304,
+    "precision": 0.243,
+    "false_alarms": 1409,
+    "tp": 453,
+    "missed": 1035
    }
   },
   "Same name after spelling rules": {
    "all": {
-    "found": 0.634,
-    "precision": 0.879,
-    "false_alarms": 214,
-    "tp": 1548,
-    "missed": 894
+    "found": 0.621,
+    "precision": 0.454,
+    "false_alarms": 1820,
+    "tp": 1511,
+    "missed": 924
    },
    "spelled_differently": {
-    "found": 0.385,
-    "precision": 0.723,
-    "false_alarms": 214,
-    "tp": 559,
-    "missed": 894
+    "found": 0.379,
+    "precision": 0.237,
+    "false_alarms": 1820,
+    "tp": 564,
+    "missed": 924
    }
   },
   "Fuzzy text match (80% similar)": {
    "all": {
-    "found": 0.829,
-    "precision": 0.818,
-    "false_alarms": 451,
-    "tp": 2024,
-    "missed": 418
+    "found": 0.823,
+    "precision": 0.398,
+    "false_alarms": 3028,
+    "tp": 2005,
+    "missed": 430
    },
    "spelled_differently": {
-    "found": 0.712,
-    "precision": 0.697,
-    "false_alarms": 451,
-    "tp": 1035,
-    "missed": 418
+    "found": 0.711,
+    "precision": 0.259,
+    "false_alarms": 3028,
+    "tp": 1058,
+    "missed": 430
    }
   },
   "Logistic regression on features": {
    "all": {
-    "found": 0.878,
-    "precision": 0.878,
-    "false_alarms": 297,
-    "tp": 2144,
-    "missed": 298
+    "found": 0.483,
+    "precision": 0.696,
+    "false_alarms": 514,
+    "tp": 1177,
+    "missed": 1258
    },
    "spelled_differently": {
-    "found": 0.807,
-    "precision": 0.798,
-    "false_alarms": 297,
-    "tp": 1172,
-    "missed": 281
+    "found": 0.401,
+    "precision": 0.537,
+    "false_alarms": 514,
+    "tp": 597,
+    "missed": 891
    }
   },
   "TabPFN on features": {
    "all": {
-    "found": 0.901,
-    "precision": 0.886,
-    "false_alarms": 282,
-    "tp": 2201,
-    "missed": 241
+    "found": 0.518,
+    "precision": 0.724,
+    "false_alarms": 480,
+    "tp": 1262,
+    "missed": 1173
    },
    "spelled_differently": {
-    "found": 0.845,
-    "precision": 0.813,
-    "false_alarms": 282,
-    "tp": 1228,
-    "missed": 225
+    "found": 0.472,
+    "precision": 0.594,
+    "false_alarms": 480,
+    "tp": 702,
+    "missed": 786
    }
   }
  },
  "tabpfn_bands": [
   {
    "band": "0.9-1.0",
-   "pairs": 1425,
-   "same_person": 0.98
+   "pairs": 370,
+   "same_person": 0.957
   },
   {
    "band": "0.7-0.9",
-   "pairs": 759,
-   "same_person": 0.808
+   "pairs": 441,
+   "same_person": 0.791
   },
   {
    "band": "0.5-0.7",
-   "pairs": 299,
-   "same_person": 0.642
+   "pairs": 931,
+   "same_person": 0.6
   },
   {
    "band": "0.3-0.5",
-   "pairs": 294,
-   "same_person": 0.371
+   "pairs": 1539,
+   "same_person": 0.454
   },
   {
    "band": "0.0-0.3",
-   "pairs": 4537,
-   "same_person": 0.029
+   "pairs": 7755,
+   "same_person": 0.061
   }
  ]
 }

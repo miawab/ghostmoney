@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ghostmoney
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt && python scripts/fetch_index.py
+    startCommand: python -m gm.server
+    healthCheckPath: /api/health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: TABPFN_TOKEN
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false

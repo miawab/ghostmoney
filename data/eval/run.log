@@ -1,0 +1,119 @@
+C:\Users\PC\Desktop\work\pricecheck\.venv\Lib\site-packages\tabpfn\validation.py:234: UserWarning: Running on CPU with more than 1000 samples may be slow.
+Consider using a GPU or the tabpfn-client API: https://github.com/PriorLabs/tabpfn-client
+  _validate_num_samples_for_cpu(
+{
+ "train_pairs": 3000,
+ "test_pairs": 11036,
+ "test_same_person": 2435,
+ "test_spelled_differently": 1488,
+ "tabpfn_seconds": 592.8,
+ "methods": {
+  "Ctrl+F (what families do today)": {
+   "all": {
+    "found": 0.575,
+    "precision": 0.498,
+    "false_alarms": 1409,
+    "tp": 1400,
+    "missed": 1035
+   },
+   "spelled_differently": {
+    "found": 0.304,
+    "precision": 0.243,
+    "false_alarms": 1409,
+    "tp": 453,
+    "missed": 1035
+   }
+  },
+  "Same name after spelling rules": {
+   "all": {
+    "found": 0.621,
+    "precision": 0.454,
+    "false_alarms": 1820,
+    "tp": 1511,
+    "missed": 924
+   },
+   "spelled_differently": {
+    "found": 0.379,
+    "precision": 0.237,
+    "false_alarms": 1820,
+    "tp": 564,
+    "missed": 924
+   }
+  },
+  "Fuzzy text match (80% similar)": {
+   "all": {
+    "found": 0.823,
+    "precision": 0.398,
+    "false_alarms": 3028,
+    "tp": 2005,
+    "missed": 430
+   },
+   "spelled_differently": {
+    "found": 0.711,
+    "precision": 0.259,
+    "false_alarms": 3028,
+    "tp": 1058,
+    "missed": 430
+   }
+  },
+  "Logistic regression on features": {
+   "all": {
+    "found": 0.483,
+    "precision": 0.696,
+    "false_alarms": 514,
+    "tp": 1177,
+    "missed": 1258
+   },
+   "spelled_differently": {
+    "found": 0.401,
+    "precision": 0.537,
+    "false_alarms": 514,
+    "tp": 597,
+    "missed": 891
+   }
+  },
+  "TabPFN on features": {
+   "all": {
+    "found": 0.518,
+    "precision": 0.724,
+    "false_alarms": 480,
+    "tp": 1262,
+    "missed": 1173
+   },
+   "spelled_differently": {
+    "found": 0.472,
+    "precision": 0.594,
+    "false_alarms": 480,
+    "tp": 702,
+    "missed": 786
+   }
+  }
+ },
+ "tabpfn_bands": [
+  {
+   "band": "0.9-1.0",
+   "pairs": 370,
+   "same_person": 0.957
+  },
+  {
+   "band": "0.7-0.9",
+   "pairs": 441,
+   "same_person": 0.791
+  },
+  {
+   "band": "0.5-0.7",
+   "pairs": 931,
+   "same_person": 0.6
+  },
+  {
+   "band": "0.3-0.5",
+   "pairs": 1539,
+   "same_person": 0.454
+  },
+  {
+   "band": "0.0-0.3",
+   "pairs": 7755,
+   "same_person": 0.061
+  }
+ ]
+}

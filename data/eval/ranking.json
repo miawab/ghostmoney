@@ -1,0 +1,20 @@
+{
+ "all": {
+  "Ctrl+F": 0.51,
+  "Fuzzy text": 0.622,
+  "TabPFN": 0.768,
+  "queries": 2429
+ },
+ "father known on both sides": {
+  "Ctrl+F": 0.624,
+  "Fuzzy text": 0.729,
+  "TabPFN": 0.976,
+  "queries": 85
+ },
+ "no father's name": {
+  "Ctrl+F": 0.518,
+  "Fuzzy text": 0.634,
+  "TabPFN": 0.762,
+  "queries": 2298
+ }
+}

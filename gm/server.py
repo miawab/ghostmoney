@@ -81,6 +81,8 @@ def scorer():
         tr = pd.read_csv(ROOT / "data" / "model" / "train-sample.csv")
         X, y = tr[FEATURES].values, tr["label"].values
         try:
+            if not os.environ.get("TABPFN_TOKEN"):
+                raise RuntimeError("no TABPFN_TOKEN")
             from tabpfn_client import TabPFNClassifier, set_access_token
             set_access_token(os.environ["TABPFN_TOKEN"])
             clf = TabPFNClassifier()
@@ -88,8 +90,7 @@ def scorer():
             _model.update(clf=clf, kind="tabpfn")
         except Exception as e:  # keep the site useful, and say which model scored
             print("TabPFN unavailable, using logistic regression:", e)
-            from sklearn.linear_model import LogisticRegression
-            _model.update(clf=LogisticRegression(max_iter=2000).fit(X, y), kind="logistic-fallback")
+            _model.update(clf=backup(), kind="logistic-fallback")
         return _model
 
 
@@ -103,22 +104,32 @@ async def score(req: Request):
         raise HTTPException(400, f"Each row must be {len(FEATURES)} numbers.")
     spend("score", client_ip(req))
     t0 = time.time()
+    import numpy as np
+    X = np.asarray(rows, dtype=float)
     with span(op="gen_ai.execute_tool", name="execute_tool tabpfn_match_score") as s:
         m = scorer()
+        kind = m["kind"]
         try:
-            probs = m["clf"].predict_proba(rows)[:, 1]
-        except Exception as e:
-            if m["kind"] != "tabpfn":
-                raise
-            print("TabPFN call failed, falling back:", e)
-            _model.update(clf=None)
-            os.environ["TABPFN_TOKEN"] = ""
-            m = scorer()
-            probs = m["clf"].predict_proba(rows)[:, 1]
+            probs = m["clf"].predict_proba(X)[:, 1]
+        except Exception as e:  # this request only: TabPFN stays the scorer for the next one
+            print("TabPFN call failed, using logistic regression for this request:", e)
+            probs, kind = backup().predict_proba(X)[:, 1], "logistic-fallback"
         s.set_data("gen_ai.tool.name", "tabpfn_match_score")
         s.set_data("rows", len(rows))
-        s.set_data("model", m["kind"])
-    return {"p": [round(float(p), 4) for p in probs], "model": m["kind"], "ms": int((time.time() - t0) * 1000)}
+        s.set_data("model", kind)
+    return {"p": [round(float(p), 4) for p in probs], "model": kind, "ms": int((time.time() - t0) * 1000)}
+
+
+_backup = []
+
+
+def backup():
+    if not _backup:
+        import pandas as pd
+        from sklearn.linear_model import LogisticRegression
+        tr = pd.read_csv(ROOT / "data" / "model" / "train-sample.csv")
+        _backup.append(LogisticRegression(max_iter=2000).fit(tr[FEATURES].values, tr["label"].values))
+    return _backup[0]
 
 
 # ---- where to claim today ----

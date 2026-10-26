@@ -156,16 +156,22 @@ async function run() {
   const sc = await r.json();
   cands.forEach((c, i) => { c.p = c.cnic === 'match' ? Math.max(sc.p[i], 0.99) : sc.p[i]; });
   // Code checks the model: a clearly different father's name on the record is a different person.
-  // (Compared without spaces, so ALLAHDITTA and ALLAH DITTA still agree.)
+  // Different only if no part of the name agrees and the letters don't either (so ALLAHDITTA and
+  // ALLAH DITA still count as the same father, but LAL DIN does not).
   let fatherOut = 0;
   if (father.length) {
-    const fq = father.map(M.skeleton).join('');
+    const fqSkel = new Set(father.map(M.skeleton));
+    const fqJoined = father.join('');
     for (const c of cands) {
       if (!c.f?.length || c.cnic === 'match') continue;
-      if (M.seqRatio(fq, c.f.map(M.skeleton).join('')) < 0.5) { c.p = Math.min(c.p, 0.1); c.fatherDiffers = true; fatherOut++; }
+      const shared = c.f.some((t) => !M.COMMON.has(t) && fqSkel.has(M.skeleton(t)));
+      if (!shared && M.seqRatio(fqJoined, c.f.join('')) < 0.75) { c.p = Math.min(c.p, 0.1); c.fatherDiffers = true; fatherOut++; }
     }
   }
-  cands.sort((a, b) => b.p - a.p);
+  // The city isn't one of TabPFN's numbers (training rows have no family-typed city), so it only breaks near-ties.
+  const city = (q.city || '').trim().toLowerCase();
+  if (city.length >= 3 && !PROV_ALIASES[city]) for (const c of cands) c.cityHit = `${c.br} ${c.ad}`.toLowerCase().includes(city);
+  cands.sort((a, b) => (b.p + (b.cityHit ? 0.05 : 0)) - (a.p + (a.cityHit ? 0.05 : 0)));
   s4.done((sc.model === 'tabpfn' ? 'TabPFN' : 'backup model (TabPFN unreachable)') + (fatherOut ? ` · ${fatherOut} set aside: father's name differs` : ''));
   G.trace.push({ op: 'gen_ai.execute_tool', name: 'tabpfn_match_score', ms: Math.round(performance.now() - t4), rows: cands.length, model: sc.model });
 
@@ -193,32 +199,40 @@ function show(q, cands, cnicOut) {
   const total = strong.reduce((s, c) => s + (c.a || 0), 0);
   $('#results').hidden = false;
   const banks = [...new Set(strong.map((c) => c.b))];
-  $('#summary').innerHTML = strong.length
+  // A common name with nothing else to go on: be honest that these are many different people.
+  const crowd = strong.length > 5 && !strong.some((c) => c.cnic === 'match');
+  $('#summary').innerHTML = crowd
+    ? `<div class="big">${strong.length}</div><p><b>accounts belong to people named ${esc(q.name)}</b>, and the lists alone can't tell them apart. ${q.father ? 'Most rows have no father\'s name recorded.' : 'Adding the father\'s or husband\'s name helps.'} ${q.cnic ? '' : 'A CNIC settles it, if anyone has it saved. '}The closest are below; a branch in the city where they lived is the best clue.</p>`
+    : strong.length
     ? `<div class="big">${fmt(total)}</div><p><b>${strong.length} account${strong.length > 1 ? 's' : ''}</b> in the State Bank lists could be ${esc(q.name)}'s, at ${esc(banks.slice(0, 3).join(', '))}${banks.length > 3 ? ' and more' : ''}.${cnicOut ? ` ${cnicOut} rows with the name were ruled out by CNIC.` : ''}</p>
        <div class="listen"><button type="button" data-lang="ur" lang="ur">اردو میں سنیں</button><button type="button" data-lang="en">Listen</button></div>`
     : `<p class="empty">No strong match for ${esc(q.name)} in the lists${cnicOut ? ` (${cnicOut} rows with that name have a different CNIC)` : ''}. Try another spelling, add the father's name, or describe them to Gemma. Many families find nothing, which is good news too: nothing was lost.</p>`;
   $('#summary').querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => listen(b.dataset.lang, strong.length, total, banks, b)));
   const box = $('#cards'); box.innerHTML = '';
-  strong.slice(0, 12).forEach((c) => box.append(card(c, q)));
+  strong.slice(0, 12).forEach((c) => box.append(card(c, q, crowd && strong.length)));
   $('#weaker').hidden = !weak.length;
   if (weak.length) {
     $('#weaker summary').textContent = `${weak.length} weaker matches (similar names, probably other people)`;
-    const wb = $('#weakCards'); wb.innerHTML = ''; weak.forEach((c) => wb.append(card(c, q)));
+    const wb = $('#weakCards'); wb.innerHTML = ''; weak.forEach((c) => wb.append(card(c, q, crowd && strong.length)));
   }
   remember(q.name);
   $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function card(c, q) {
+function card(c, q, crowd = 0) {
   const el = $('#cardTpl').content.firstElementChild.cloneNode(true);
-  const [cls, words] = band(c.p);
+  let [cls, words] = band(c.p);
+  // In a crowd of same-name people, a high name score is not identity. Only a CNIC, a matching father's
+  // name or the city can lift one row above the rest, so say so.
+  const fatherAgrees = q.father && c.f?.length && !c.fatherDiffers;
+  if (crowd && c.cnic !== 'match' && !fatherAgrees && c.p >= 0.5) [cls, words] = [c.cityHit ? 'maybe' : '', `Same name, one of ${crowd}`];
   if (cls) el.classList.add(cls);
   el.querySelector('.nm').textContent = c.n;
   el.querySelector('.where').textContent = `${c.b} · ${c.br || 'branch not given'}${c.pr ? ' · ' + c.pr : ''}`;
   el.querySelector('.amt').textContent = c.a ? fmt(c.a) : '';
   el.querySelector('.meter span').style.width = Math.round(c.p * 100) + '%';
   el.querySelector('.meter').setAttribute('aria-label', `match ${Math.round(c.p * 100)} percent`);
-  el.querySelector('.verdict').textContent = `${words} · ${Math.round(c.p * 100)}%`;
+  el.querySelector('.verdict').textContent = `${words}${words.startsWith('Same name') ? '' : ` · ${Math.round(c.p * 100)}%`}${c.cityHit ? ` · branch in ${q.city}` : ''}${c.fatherDiffers ? ' · father\'s name differs' : ''}`;
   const cnic = c.cnic === 'match' ? '<span class="badge ok">CNIC matches</span>' : c.cnic === 'none' ? '<span class="badge na">no CNIC in list</span>' : c.c4 ? `<span class="badge na">ends ${esc(c.c4)}</span>` : '<span class="badge na">not listed</span>';
   const facts = [['Listed by SBP', c.y], ['Last activity', c.la || 'not given'], ['Account', c.ac ? 'ending ' + c.ac : c.in || '—'], ['Type', c.k || c.in || '—'], ['CNIC', cnic]];
   if (c.f && c.f.length) facts.push(['Father / husband', c.rel ? c.rel + ' ' + c.f.join(' ') : c.f.join(' ')]);

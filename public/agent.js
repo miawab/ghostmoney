@@ -91,16 +91,18 @@ export async function review(query, notes, cands) {
   const system = `You double-check possible matches between a deceased relative and rows in Pakistan's unclaimed-deposit lists.
 A matching score from a separate model is given; do not repeat it. Use the family's notes (city, work, years) and the row (branch, province, year listed, last activity date).
 Return JSON only: {"reviews": [{"id": 0, "verdict": "likely|maybe|unlikely", "reason": "one short sentence"}]}.
-Reasons must only use facts shown. Say "unlikely" when the row's details clash with the notes (e.g. a branch in another province, last activity after the person died).`;
+Reasons must only use facts shown. "not listed" means the list does not say, so it neither matches nor clashes.
+Say "unlikely" when the row's details clash with the notes (e.g. a different father's name, a branch in another province, last activity after the person died).`;
   const user = JSON.stringify({
     looking_for: query, family_notes: notes || '',
-    rows: cands.map((c) => ({ id: c.i, name_in_list: c.n, branch: c.br, province: c.pr, listed_in: c.y, last_activity: c.la || 'not given', kind: c.k, score: Math.round(c.p * 100) / 100 })),
+    rows: cands.map((c) => ({ id: c.i, name_in_list: c.n, father_or_husband_in_list: c.f?.length ? c.f.join(' ') : 'not listed', branch: c.br, province: c.pr, listed_in: c.y, last_activity: c.la || 'not given', kind: c.k, score: Math.round(c.p * 100) / 100 })),
   });
   const j = await chat('review', system, user);
   const ids = new Set(cands.map((c) => c.i));
   const out = {};
   for (const r of Array.isArray(j.reviews) ? j.reviews : []) {
     // only rows we showed it, only the three verdicts, short plain reasons
+    r.id = Number(r.id);
     if (!ids.has(r.id) || !['likely', 'maybe', 'unlikely'].includes(r.verdict)) continue;
     out[r.id] = { verdict: r.verdict, reason: String(r.reason || '').slice(0, 220) };
   }

@@ -51,7 +51,8 @@ def main():
     def fq(p):
         return freq[" ".join(sorted(skeleton(t) for t in p["own"]))]
 
-    cnics = [c for c, ix in by_cnic.items() if len(ix) > 1]
+    # a CNIC on dozens of rows is a placeholder (0000000000000) or an organisation, not one person
+    cnics = [c for c, ix in by_cnic.items() if 1 < len(ix) <= 20]
     random.shuffle(cnics)
     cnics = cnics[:12000]
     test_cnics = set(cnics[: len(cnics) // 4])
