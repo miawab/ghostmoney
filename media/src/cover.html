@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Source+Sans+3:wght@400;600&family=Noto+Nastaliq+Urdu:wght@600&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; }
+  .c { width: 1000px; height: 420px; position: relative; overflow: hidden; color: #f4ebdc; font-family: "Source Sans 3";
+       background: radial-gradient(600px 380px at 82% 30%, rgba(245,165,36,.28), transparent 65%), radial-gradient(500px 300px at 0% 100%, rgba(226,85,122,.18), transparent 60%), #120d1d; }
+  .papel { position: absolute; top: 0; left: 0; right: 0; height: 26px;
+    background: repeating-linear-gradient(90deg, #f5a524 0 80px, #e2557a 80px 160px, #3fb8a6 160px 240px, #9b6bd6 240px 320px);
+    -webkit-mask: radial-gradient(circle at 10px 9px, transparent 3px, #000 3.5px) 0 0 / 20px 20px; }
+  .ur { position: absolute; left: 60px; top: 58px; font: 600 30px "Noto Nastaliq Urdu"; color: #f5a524; }
+  h1 { position: absolute; left: 60px; top: 120px; margin: 0; font: 800 82px/1 "Fraunces"; letter-spacing: -2px; }
+  h1 em { font-style: italic; color: #f5a524; text-shadow: 0 0 30px rgba(245,165,36,.5); }
+  p { position: absolute; left: 62px; top: 228px; width: 560px; margin: 0; font-size: 25px; line-height: 1.35; color: #e6d9e3; }
+  .stat { position: absolute; left: 62px; bottom: 44px; font: 700 22px "Source Sans 3"; color: #b9a8bd; }
+  .stat b { color: #f5a524; font: 800 30px "Fraunces"; margin-right: 6px; }
+  .candle { position: absolute; right: 120px; top: 120px; width: 140px; }
+  .flame { animation: none; filter: drop-shadow(0 0 30px #f5a524); }
+</style></head>
+<body><div class="c" id="cover">
+  <div class="papel"></div>
+  <div class="ur" dir="rtl">جو وہ پیچھے چھوڑ گئے</div>
+  <h1>Ghost <em>Money</em></h1>
+  <p>Find the money your late relatives left in Pakistani banks.</p>
+  <div class="stat"><b id="bn">Rs 8.9 bn</b> waiting in the State Bank's lists</div>
+  <svg class="candle" viewBox="0 0 32 40"><g class="flame"><path d="M16 2c3.4 4.5 5 7.3 5 10.1a5 5 0 0 1-10 0C11 9.3 12.6 6.5 16 2z" fill="#f5a524"/><path d="M16 7.5c1.6 2.2 2.3 3.6 2.3 4.8a2.3 2.3 0 0 1-4.6 0c0-1.2.7-2.6 2.3-4.8z" fill="#ffe3a3"/></g><rect x="10" y="18" width="12" height="21" rx="2.5" fill="#f4ebdc"/><rect x="15.4" y="15.5" width="1.2" height="3" fill="#3a2b20"/></svg>
+</div></body></html>

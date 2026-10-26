@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; }
+  .d { width: 1200px; padding: 40px 44px 36px; box-sizing: border-box; background: #120d1d; color: #f4ebdc; font-family: "Source Sans 3"; }
+  h2 { font: 700 34px "Fraunces"; margin: 0 0 6px; }
+  .sub { color: #b9a8bd; font-size: 19px; margin: 0 0 26px; }
+  .zones { display: grid; grid-template-columns: 1.15fr 1.7fr 1fr; gap: 18px; }
+  .zone { border: 2px dashed #3a2c4d; border-radius: 18px; padding: 16px; }
+  .zone h3 { margin: 0 0 12px; font: 700 15px "Source Sans 3"; letter-spacing: 1.5px; text-transform: uppercase; color: #b9a8bd; }
+  .zone.you { border-color: #f5a524; background: rgba(245,165,36,.05); }
+  .zone.you h3 { color: #f5a524; }
+  .box { background: #221930; border: 1px solid #3a2c4d; border-radius: 12px; padding: 11px 13px; margin-bottom: 10px; font-size: 17px; line-height: 1.3; }
+  .box b { display: block; font-size: 18px; color: #fff; }
+  .box small { color: #b9a8bd; font-size: 14.5px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 99px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
+  .g { background: rgba(63,184,166,.18); color: #59d2bf; }
+  .t { background: rgba(226,85,122,.18); color: #f08aa5; }
+  .s { background: rgba(155,107,214,.2); color: #c3a3ef; }
+  .arrow { text-align: center; color: #f5a524; font-size: 20px; margin: -4px 0 6px; }
+  .wire { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; font-size: 16px; color: #e6d9e3; }
+  .wire div { border-top: 2px solid #f5a524; padding-top: 8px; }
+  .wire b { color: #f5a524; }
+</style></head>
+<body><div class="d" id="diagram">
+  <h2>How Ghost Money searches without seeing the name</h2>
+  <p class="sub">What crosses the network is only a shard number and twelve numbers per row.</p>
+  <div class="zones">
+    <div class="zone">
+      <h3>Once, on my PC</h3>
+      <div class="box"><b>782 State Bank files</b><small>xls, xlsx, csv, zip · 2003 to 2025</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>parse + clean</b><small>header found by keywords, one schema</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>4,096 index shards</b><small>each row filed under its name keys: RASOOL, RASUL, رسول → RSL</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>TabPFN training pairs</b><small>same CNIC = same person</small></div>
+    </div>
+    <div class="zone you">
+      <h3>On your device</h3>
+      <div class="box"><b>Gemma reads your description <span class="tag g">Gemma</span></b><small>any language → name, father, city. Code drops any CNIC not in your text</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>spelling keys → shard numbers</b><small>download only those pieces, compare every row</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>CNIC checked against a hash</b><small>a different father's name sets a row aside</small></div>
+      <div class="arrow">↓</div>
+      <div class="box"><b>Gemma second opinion + claim letter <span class="tag g">Gemma</span></b><small>numbers in the letter come from the row, never from Gemma</small></div>
+    </div>
+    <div class="zone">
+      <h3>Server</h3>
+      <div class="box"><b>/shards/n <span class="tag s">Render</span></b><small>static pieces</small></div>
+      <div class="box"><b>/api/score <span class="tag t">TabPFN</span></b><small>12 numbers per row in, probability out</small></div>
+      <div class="box"><b>/api/branch <span class="tag s">SerpApi</span></b><small>where the branch is today</small></div>
+      <div class="box"><b>/api/voice <span class="tag s">ElevenLabs</span></b><small>Urdu summary from counts + bank names</small></div>
+      <div class="box"><b>traces <span class="tag s">Sentry</span></b><small>timings and token counts, no text</small></div>
+    </div>
+  </div>
+  <div class="wire">
+    <div><b>Never sent:</b> the name, the father's name, the CNIC, your story</div>
+    <div><b>Sent:</b> shard numbers, feature numbers, bank + branch names from the public list</div>
+    <div><b>Gemma runs:</b> in the tab (WebLLM, Gemma 4 E2B) or through Ollama locally</div>
+  </div>
+</div></body></html>
