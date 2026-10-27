@@ -14,7 +14,15 @@ Ghost Money searches every list from 2003 to 2025 at once, handles the spellings
 - The voice summary is worded on the server from counts and bank names only.
 
 ## How well it matches
-Test set: 7,314 pairs of list rows, labelled by CNIC (same 13-digit CNIC = same person, however it was spelled), split so no person is in both training and test. See `data/eval/matcher.json` and `scripts/eval_matcher.py`.
+Test set: 11,036 pairs of list rows, labelled by CNIC (same 13-digit CNIC = same person, however it was spelled), split so no person is in both training and test. The look-alikes include "name twins": the identical name under a different CNIC.
+
+| Right account ranked first (2,429 test searches) | |
+|---|---|
+| Ctrl+F | 51% |
+| Fuzzy text match | 62% |
+| TabPFN on 12 numbers | 77% |
+
+When TabPFN scores a pair 0.9 or more, it is the same person 96% of the time (370 pairs). See `data/eval/` and `scripts/eval_matcher.py`, `scripts/eval_ranking.py`.
 
 ## Run it locally
 ```
@@ -28,6 +36,7 @@ With [Ollama](https://ollama.com) running and `OLLAMA_URL=http://localhost:11434
 
 Build the index from the State Bank's files yourself:
 ```
+pip install openpyxl xlrd lxml beautifulsoup4 html5lib
 python -I scripts/download.py      # ~780 files, ~1.9 GB, slow server
 python -I scripts/parse.py         # one clean table per year
 python -I scripts/build_index.py   # shards + stats

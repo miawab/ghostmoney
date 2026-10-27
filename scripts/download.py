@@ -4,7 +4,7 @@ Three files at a time, retries, writes to .part and renames so a broken download
 mistaken for a finished one. Skips files already on disk. Year comes from the page section,
 or from the file name when the page didn't label it.
 """
-import json, os, re, sys, time, urllib.request
+import json, os, re, sys, time, urllib.request, zipfile
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,8 +31,14 @@ def fetch(row):
         try:
             req = urllib.request.Request(row["url"], headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=300) as r, open(dest + ".part", "wb") as f:
+                want = int(r.headers.get("Content-Length") or 0)
                 while chunk := r.read(1 << 16):
                     f.write(chunk)
+            got = os.path.getsize(dest + ".part")
+            if want and got != want:  # the server sometimes ends a big file early without an error
+                raise IOError(f"short read {got} of {want}")
+            if name.lower().endswith((".xlsx", ".zip")) and not zipfile.is_zipfile(dest + ".part"):
+                raise IOError("not a whole zip")
             os.replace(dest + ".part", dest)
             return True
         except Exception as e:

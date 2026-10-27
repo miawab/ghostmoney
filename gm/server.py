@@ -9,7 +9,7 @@
 
 run:  python -m gm.server   (reads .env; open http://localhost:8000)
 """
-import hashlib, json, os, re, threading, time
+import hashlib, json, os, re, tarfile, threading, time
 from collections import defaultdict
 from pathlib import Path
 
@@ -280,20 +280,58 @@ async def trace(req: Request):
 
 
 # ---- data + page ----
+# The index is either unpacked under SITE, or still inside the archive build_index.py writes
+# (then shards are read from it by offset, without a second copy on disk).
+TAR = ROOT / "data" / "ghostmoney-index.tar"
+_tar = {}
+
+
+def in_tar(n):
+    if not _tar and TAR.exists():
+        with tarfile.open(TAR) as t:
+            _tar.update({m.name: (m.offset_data, m.size) for m in t if m.isfile()})
+    return _tar.get(f"site/shards/{n}.json.gz")
+
+
+def shard_size(n):
+    path = SITE / "shards" / f"{n}.json.gz"
+    return path.stat().st_size if path.exists() else (in_tar(n) or (0, 0))[1]
+
+
+def shard_bytes(n):
+    path = SITE / "shards" / f"{n}.json.gz"
+    if path.exists():
+        return path.read_bytes()
+    if not in_tar(n):
+        return None
+    off, size = in_tar(n)
+    with open(TAR, "rb") as f:
+        f.seek(off)
+        return f.read(size)
+
+
 @app.get("/shards/{n}.json.gz")
 def shard(n: int):
     if not 0 <= n < 4096:
         raise HTTPException(404)
-    path = SITE / "shards" / f"{n}.json.gz"
-    if not path.exists():
+    data = shard_bytes(n)
+    if data is None:
         raise HTTPException(404, "index not built")
-    return Response(path.read_bytes(), media_type="application/json",
+    return Response(data, media_type="application/json",
                     headers={"Content-Encoding": "gzip", "Cache-Control": "public, max-age=86400"})
+
+
+_stats = {}
 
 
 @app.get("/stats.json")
 def stats():
-    return FileResponse(SITE / "stats.json", headers={"Cache-Control": "public, max-age=3600"})
+    # plus each shard's size, so the page can skip a huge piece when a smaller key covers the name
+    if not _stats:
+        s = json.loads((SITE / "stats.json").read_text())
+        s["sizes"] = [shard_size(n) // 1000 for n in range(s["shards"])]
+        _stats.update(s)
+    return JSONResponse(_stats, headers={"Cache-Control": "public, max-age=300"})
 
 
 @app.get("/api/health")

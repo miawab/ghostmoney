@@ -1,4 +1,4 @@
-"""Build the search index the site serves: data/index/site/shards/<n>.json.gz + stats.json.
+"""Build the search index the site serves: data/ghostmoney-index.tar holding site/shards/<n>.json.gz + stats.json.
 
 Every person row is written to the shard of each of its name keys (gm.names.keys). The browser works
 out the keys for a name on its own and downloads only those shards, so the server learns a shard
@@ -9,7 +9,7 @@ confirm a CNIC the family types in without publishing every number again.
 
 usage: python -I scripts/build_index.py
 """
-import csv, glob, gzip, hashlib, json, os, shutil, sys, zlib
+import csv, glob, gzip, hashlib, io, json, os, sys, tarfile, zlib
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,6 +79,12 @@ def new_stats():
             "with_father": 0, "over_100k": 0, "shards": SHARDS}
 
 
+def add(tar, name, data):
+    info = tarfile.TarInfo(name)
+    info.size = len(data)
+    tar.addfile(info, io.BytesIO(data))
+
+
 def full_name(p):
     return " ".join(sorted(skeleton(t) for t in p["own"]))
 
@@ -89,18 +95,12 @@ def main():
     freq = defaultdict(int)
     for *_, p, _raw, _r in walk(stats):
         freq[full_name(p)] += 1
-    # Pass 2: write rows into shard spool files in batches, so millions of rows never sit in memory at once.
-    spool = os.path.join(ROOT, "data", "index", "spool")
-    shutil.rmtree(spool, ignore_errors=True)
-    os.makedirs(spool)
-    buf, held, rid = defaultdict(list), 0, 0
-
-    def flush():
-        for s, lines in buf.items():
-            with open(os.path.join(spool, f"{s}.jsonl"), "a", encoding="utf-8") as f:
-                f.write("".join(lines))
-        buf.clear()
-
+    # Pass 2: each shard is a gzip stream kept in memory (a small compressor per shard), so the
+    # whole index is built in one pass without an uncompressed copy on disk.
+    zs = [zlib.compressobj(6, zlib.DEFLATED, 31, memLevel=2) for _ in range(SHARDS)]
+    out = [[] for _ in range(SHARDS)]
+    started = bytearray(SHARDS)
+    rid = 0
     for year, bank, now, amt, p, raw, r in walk(new_stats()):
         c = cnic_digits(r["cnic"])
         stats["with_cnic"] += bool(c)
@@ -116,28 +116,30 @@ def main():
         }
         if now:
             row["now"] = now
-        line = json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n"
+        line = json.dumps(row, separators=(",", ":"), ensure_ascii=False).encode()
         ks = keys(p["own"]) or ["+".join(sorted(skeleton(t) for t in p["own"]))]
         for s in {shard_of(k) for k in ks}:
-            buf[s].append(line)
-            held += 1
-        if held > 400_000:
-            flush()
-            held = 0
-    flush()
+            chunk = zs[s].compress((b"," if started[s] else b"[") + line)
+            if chunk:
+                out[s].append(chunk)
+            started[s] = 1
 
-    os.makedirs(os.path.join(OUT, "shards"), exist_ok=True)
-    size = 0
-    for s in range(SHARDS):
-        path = os.path.join(spool, f"{s}.jsonl")
-        lines = open(path, encoding="utf-8").read().splitlines() if os.path.exists(path) else []
-        data = gzip.compress(("[" + ",".join(lines) + "]").encode(), 6)
-        with open(os.path.join(OUT, "shards", f"{s}.json.gz"), "wb") as f:
-            f.write(data)
-        size += len(data)
-    shutil.rmtree(spool, ignore_errors=True)
     stats["by_bank"] = {k: v for k, v in sorted(stats["by_bank"].items(), key=lambda x: -x[1][1])}
-    stats["index_mb"] = round(size / 1e6, 1)
+    # Written straight into the release tar (site/shards/<n>.json.gz + site/stats.json);
+    # scripts/fetch_index.py unpacks it into data/index/.
+    tar_path = os.path.join(ROOT, "data", "ghostmoney-index.tar")
+    size = 0
+    with tarfile.open(tar_path + ".part", "w") as tar:
+        for s in range(SHARDS):
+            out[s].append(zs[s].compress(b"]" if started[s] else b"[]"))
+            out[s].append(zs[s].flush())
+            add(tar, f"site/shards/{s}.json.gz", b"".join(out[s]))
+            size += sum(map(len, out[s]))
+            out[s] = None
+        stats["index_mb"] = round(size / 1e6, 1)
+        add(tar, "site/stats.json", json.dumps(stats, indent=1).encode())
+    os.replace(tar_path + ".part", tar_path)
+    os.makedirs(OUT, exist_ok=True)
     json.dump(stats, open(os.path.join(OUT, "stats.json"), "w"), indent=1)
     print(json.dumps({k: v for k, v in stats.items() if k not in ("by_bank", "by_year")}, indent=1))
 

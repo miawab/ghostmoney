@@ -22,7 +22,12 @@ $('#cities').innerHTML = Object.keys(cityToProv).sort().map((c) => `<option valu
 const provinceOf = (s) => { const k = (s || '').trim().toLowerCase(); return cityToProv[k] || PROV_ALIASES[k] || ''; };
 
 // ---- stats ----
-fetch('stats.json').then((r) => r.json()).then((s) => {
+let sizes = [];  // KB per index piece
+let indexVer = '';  // changes when the index is rebuilt, so a cached old piece is never mixed in
+const BIG = 3000;
+const statsReady = fetch('stats.json').then((r) => r.json()).then((s) => {
+  sizes = s.sizes || [];
+  indexVer = String(s.rows || '');
   $('#sPeople').textContent = (s.people / 1e6).toFixed(2) + ' million';
   $('#sMoney').textContent = 'Rs ' + (s.pkr_people / 1e9).toFixed(1) + ' billion';
   $('#sYears').textContent = Object.keys(s.by_year).length + ' years';
@@ -105,15 +110,24 @@ async function run() {
   if (!own.length) throw new Error('That name has no letters we can search.');
 
   // 1. which index pieces to fetch (computed here; only shard numbers go over the network)
+  await statsReady;
   const s1 = step('browser', 'Working out the spellings to look for');
   const variants = [own, ...q.spellings.map((x) => M.tokens(M.splitRelation(x)[0]))].filter((v) => v.length);
   const qKeys = new Set(variants.flatMap((v) => M.shardKeys(v)));
-  const shardIds = [...new Set([...qKeys].map((k) => M.shardOf(k)))];
+  // Every row is filed under each of its keys, so one key per name is enough to find it. Pieces
+  // for very common parts (Ahmad, Rehman) run to 15 MB, so skip those when a smaller key covers the name.
+  const kb = (k) => sizes[M.shardOf(k)] || 0;
+  const picked = variants.flatMap((v) => {
+    const ks = M.shardKeys(v).sort((a, b) => kb(a) - kb(b));
+    const small = ks.filter((k) => kb(k) <= BIG);
+    return small.length ? small : ks.slice(0, 1);
+  });
+  const shardIds = [...new Set(picked.map((k) => M.shardOf(k)))];
   s1.done(`${[...qKeys].join(', ')} → ${shardIds.length} index piece${shardIds.length > 1 ? 's' : ''}`);
 
   const s2 = step('browser', `Downloading ${shardIds.length} index piece${shardIds.length > 1 ? 's' : ''}`);
   const t2 = performance.now();
-  const shards = await Promise.all(shardIds.map((n) => fetch(`shards/${n}.json.gz`).then((r) => { if (!r.ok) throw new Error('index not available'); return r.json(); })));
+  const shards = await Promise.all(shardIds.map((n) => fetch(`shards/${n}.json.gz?v=${indexVer}`).then((r) => { if (!r.ok) throw new Error('index not available'); return r.json(); })));
   const rows = shards.flat();
   s2.done(`${rows.length.toLocaleString()} rows`);
   G.trace.push({ op: 'gen_ai.execute_tool', name: 'fetch_shards', ms: Math.round(performance.now() - t2), shards: shardIds.length, rows: rows.length });
@@ -122,8 +136,15 @@ async function run() {
   const s3 = step('browser', 'Comparing every row in those pieces');
   const seen = new Set();
   let cands = [];
+  // A CNIC or account number shared by many rows is a placeholder the bank typed in, not a real one.
+  const chCount = {};
+  for (const r of rows) if (r.ch) chCount[r.ch] = (chCount[r.ch] || 0) + 1;
+  const city = (q.city || '').trim().toLowerCase();
+  const useCity = city.length >= 3 && !PROV_ALIASES[city];
   for (const r of rows) {
     if (seen.has(r.i)) continue;
+    if (r.ch && (chCount[r.ch] > 3 || /^(0000|1234|5678|9999|1111)$/.test(r.c4))) { r.ch = ''; r.c4 = ''; }
+    if (/^0+$/.test(r.ac)) r.ac = '';
     const rk = M.shardKeys(r.o);
     if (!rk.some((k) => qKeys.has(k))) continue;
     seen.add(r.i);
@@ -133,7 +154,7 @@ async function run() {
       const f = M.features(v, father, prov, r.o, r.f, r.pr, r.fq || 1);
       if (!best || f[6] + f[0] > best[6] + best[0]) best = f;
     }
-    cands.push({ ...r, fx: best });
+    cands.push({ ...r, fx: best, cityHit: useCity && `${r.br} ${r.ad}`.toLowerCase().includes(city) });
   }
   // CNIC: checked here against a hash in the row, never sent anywhere
   let cnicOut = 0;
@@ -143,9 +164,15 @@ async function run() {
     cnicOut = cands.filter((c) => c.cnic === 'differs').length;
     cands = cands.filter((c) => c.cnic !== 'differs');
   }
-  cands.sort((a, b) => (b.fx[6] + b.fx[0]) - (a.fx[6] + a.fx[0]));
+  // How many rows carry exactly this name (all name parts agree). For a common name this is the
+  // honest headline: thousands, of which only the 250 most promising go on to be scored.
+  const sameName = cands.filter((c) => c.fx[1] === 1).length;
+  const shared = cands.length;
+  // Most promising first: name letters, then the father's name, then province and city.
+  const pre = (c) => c.fx[6] + c.fx[0] + c.fx[8] + 0.3 * c.fx[9] + (c.cityHit ? 0.5 : 0) + (c.cnic === 'match' ? 9 : 0);
+  cands.sort((a, b) => pre(b) - pre(a));
   cands = cands.slice(0, 250);
-  s3.done(`${cands.length} share a spelling${cnicOut ? ` · ${cnicOut} ruled out by CNIC` : ''}`);
+  s3.done(`${shared.toLocaleString()} share a spelling${shared > 250 ? ' · closest 250 kept' : ''}${cnicOut ? ` · ${cnicOut} ruled out by CNIC` : ''}`);
   if (!cands.length) return show(q, [], cnicOut);
 
   // 3. TabPFN scores the numbers
@@ -169,8 +196,6 @@ async function run() {
     }
   }
   // The city isn't one of TabPFN's numbers (training rows have no family-typed city), so it only breaks near-ties.
-  const city = (q.city || '').trim().toLowerCase();
-  if (city.length >= 3 && !PROV_ALIASES[city]) for (const c of cands) c.cityHit = `${c.br} ${c.ad}`.toLowerCase().includes(city);
   cands.sort((a, b) => (b.p + (b.cityHit ? 0.05 : 0)) - (a.p + (a.cityHit ? 0.05 : 0)));
   s4.done((sc.model === 'tabpfn' ? 'TabPFN' : 'backup model (TabPFN unreachable)') + (fatherOut ? ` · ${fatherOut} set aside: father's name differs` : ''));
   G.trace.push({ op: 'gen_ai.execute_tool', name: 'tabpfn_match_score', ms: Math.round(performance.now() - t4), rows: cands.length, model: sc.model });
@@ -186,13 +211,13 @@ async function run() {
     } catch (e) { s5.done(e.message, 'fail'); }
   } else if (top.length) step('gemma', 'Second opinion skipped (Gemma not loaded)').done('', 'skip');
 
-  show(q, cands, cnicOut);
+  show(q, cands, cnicOut, sameName);
   fetch('api/trace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ steps: G.trace }) }).catch(() => {});
 }
 
 function band(p) { return p >= 0.9 ? ['likely', 'Very likely them'] : p >= 0.7 ? ['likely', 'Likely them'] : p >= 0.5 ? ['maybe', 'Possibly them'] : ['', 'Probably someone else with a similar name']; }
 
-function show(q, cands, cnicOut) {
+function show(q, cands, cnicOut, sameName = 0) {
   last = { q, cands };
   const strong = cands.filter((c) => c.p >= 0.5);
   const weak = cands.filter((c) => c.p >= 0.3 && c.p < 0.5).slice(0, 15);
@@ -201,31 +226,36 @@ function show(q, cands, cnicOut) {
   const banks = [...new Set(strong.map((c) => c.b))];
   // A common name with nothing else to go on: be honest that these are many different people.
   const crowd = strong.length > 5 && !strong.some((c) => c.cnic === 'match');
+  const crowdN = Math.max(strong.length, sameName);
+  // Even "son of the same father" can be several people: different CNICs under the same name pair.
+  const fatherRows = strong.filter((c) => q.father && c.f?.length && !c.fatherDiffers && c.cnic !== 'match');
+  const twins = new Set(fatherRows.map((c) => c.ch || c.i)).size > 2 ? fatherRows.length : 0;
   $('#summary').innerHTML = crowd
-    ? `<div class="big">${strong.length}</div><p><b>accounts belong to people named ${esc(q.name)}</b>, and the lists alone can't tell them apart. ${q.father ? 'Most rows have no father\'s name recorded.' : 'Adding the father\'s or husband\'s name helps.'} ${q.cnic ? '' : 'A CNIC settles it, if anyone has it saved. '}The closest are below; a branch in the city where they lived is the best clue.</p>`
+    ? `<div class="big">${crowdN.toLocaleString()}</div><p><b>accounts belong to people named ${esc(q.name)}</b>, and the lists alone can't tell them apart. ${twins ? `${twins} of them are also listed with the father's name ${esc(q.father)}, under different CNICs.` : q.father ? 'Most rows have no father\'s name recorded.' : 'Adding the father\'s or husband\'s name helps.'} ${q.cnic ? '' : 'A CNIC settles it, if anyone has it saved. '}The closest are below; a branch in the city where they lived is the best clue.</p>`
     : strong.length
     ? `<div class="big">${fmt(total)}</div><p><b>${strong.length} account${strong.length > 1 ? 's' : ''}</b> in the State Bank lists could be ${esc(q.name)}'s, at ${esc(banks.slice(0, 3).join(', '))}${banks.length > 3 ? ' and more' : ''}.${cnicOut ? ` ${cnicOut} rows with the name were ruled out by CNIC.` : ''}</p>
        <div class="listen"><button type="button" data-lang="ur" lang="ur">اردو میں سنیں</button><button type="button" data-lang="en">Listen</button></div>`
     : `<p class="empty">No strong match for ${esc(q.name)} in the lists${cnicOut ? ` (${cnicOut} rows with that name have a different CNIC)` : ''}. Try another spelling, add the father's name, or describe them to Gemma. Many families find nothing, which is good news too: nothing was lost.</p>`;
   $('#summary').querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => listen(b.dataset.lang, strong.length, total, banks, b)));
   const box = $('#cards'); box.innerHTML = '';
-  strong.slice(0, 12).forEach((c) => box.append(card(c, q, crowd && strong.length)));
+  strong.slice(0, 12).forEach((c) => box.append(card(c, q, crowd && crowdN, twins)));
   $('#weaker').hidden = !weak.length;
   if (weak.length) {
     $('#weaker summary').textContent = `${weak.length} weaker matches (similar names, probably other people)`;
-    const wb = $('#weakCards'); wb.innerHTML = ''; weak.forEach((c) => wb.append(card(c, q, crowd && strong.length)));
+    const wb = $('#weakCards'); wb.innerHTML = ''; weak.forEach((c) => wb.append(card(c, q, crowd && crowdN, twins)));
   }
   remember(q.name);
   $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function card(c, q, crowd = 0) {
+function card(c, q, crowd = 0, twins = 0) {
   const el = $('#cardTpl').content.firstElementChild.cloneNode(true);
   let [cls, words] = band(c.p);
   // In a crowd of same-name people, a high name score is not identity. Only a CNIC, a matching father's
   // name or the city can lift one row above the rest, so say so.
   const fatherAgrees = q.father && c.f?.length && !c.fatherDiffers;
-  if (crowd && c.cnic !== 'match' && !fatherAgrees && c.p >= 0.5) [cls, words] = [c.cityHit ? 'maybe' : '', `Same name, one of ${crowd}`];
+  if (crowd && c.cnic !== 'match' && !fatherAgrees && c.p >= 0.5) [cls, words] = [c.cityHit ? 'maybe' : '', `Same name, one of ${crowd.toLocaleString()}`];
+  if (twins && c.cnic !== 'match' && fatherAgrees && c.p >= 0.5) [cls, words] = [c.cityHit ? 'likely' : 'maybe', `Same name and father, one of ${twins}`];
   if (cls) el.classList.add(cls);
   el.querySelector('.nm').textContent = c.n;
   el.querySelector('.where').textContent = `${c.b} · ${c.br || 'branch not given'}${c.pr ? ' · ' + c.pr : ''}`;
