@@ -3,7 +3,7 @@
  "test_pairs": 11036,
  "test_same_person": 2435,
  "test_spelled_differently": 1488,
- "tabpfn_seconds": 592.8,
+ "tabpfn_seconds": 55.0,
  "methods": {
   "Ctrl+F (what families do today)": {
    "all": {
@@ -55,61 +55,61 @@
   },
   "Logistic regression on features": {
    "all": {
-    "found": 0.483,
+    "found": 0.484,
     "precision": 0.696,
     "false_alarms": 514,
-    "tp": 1177,
-    "missed": 1258
+    "tp": 1179,
+    "missed": 1256
    },
    "spelled_differently": {
-    "found": 0.401,
-    "precision": 0.537,
+    "found": 0.403,
+    "precision": 0.538,
     "false_alarms": 514,
-    "tp": 597,
-    "missed": 891
+    "tp": 599,
+    "missed": 889
    }
   },
   "TabPFN on features": {
    "all": {
-    "found": 0.518,
-    "precision": 0.724,
-    "false_alarms": 480,
-    "tp": 1262,
-    "missed": 1173
+    "found": 0.536,
+    "precision": 0.704,
+    "false_alarms": 550,
+    "tp": 1306,
+    "missed": 1129
    },
    "spelled_differently": {
-    "found": 0.472,
-    "precision": 0.594,
-    "false_alarms": 480,
-    "tp": 702,
-    "missed": 786
+    "found": 0.495,
+    "precision": 0.572,
+    "false_alarms": 550,
+    "tp": 736,
+    "missed": 752
    }
   }
  },
  "tabpfn_bands": [
   {
    "band": "0.9-1.0",
-   "pairs": 370,
+   "pairs": 373,
    "same_person": 0.957
   },
   {
    "band": "0.7-0.9",
-   "pairs": 441,
-   "same_person": 0.791
+   "pairs": 442,
+   "same_person": 0.79
   },
   {
    "band": "0.5-0.7",
-   "pairs": 931,
-   "same_person": 0.6
+   "pairs": 1041,
+   "same_person": 0.576
   },
   {
    "band": "0.3-0.5",
-   "pairs": 1539,
-   "same_person": 0.454
+   "pairs": 1444,
+   "same_person": 0.455
   },
   {
    "band": "0.0-0.3",
-   "pairs": 7755,
+   "pairs": 7736,
    "same_person": 0.061
   }
  ]

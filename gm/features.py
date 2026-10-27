@@ -17,7 +17,18 @@ def _jacc(a, b):
     return len(a & b) / len(a | b) if a | b else 0.0
 
 
+def untruncate(row_toks, q_toks):
+    """The lists cut long names at the column width ("FAYAZ HUSSAI"): a last part that starts the
+    family's word (3+ letters) is that word."""
+    if row_toks and len(row_toks[-1]) >= 3:
+        for t in q_toks:
+            if t != row_toks[-1] and t.startswith(row_toks[-1]):
+                return row_toks[:-1] + [t]
+    return row_toks
+
+
 def features(q_own, q_father, q_province, r_own, r_father, r_province, r_freq):
+    r_father = untruncate(list(r_father), q_father)
     qs = [skeleton(t) for t in q_own]
     rs = [skeleton(t) for t in r_own]
     q_rare = {skeleton(t) for t in q_own if t not in COMMON}

@@ -146,8 +146,12 @@ def _cached(kind, key, fn):
 async def branch(req: Request):
     b = await req.json()
     bank = str(b.get("bank", ""))[:80]
+    # Branch cells carry codes and abbreviations ("Palak A.K - 0750"); keep the place words.
     br = str(b.get("branch", ""))[:80]
+    br = re.sub(r"\bA\.?\s?K\b\.?|\bA\.?J\.?K\b\.?", "AJK", br, flags=re.I)
+    br = re.sub(r"\b(branch|branc|bran|br)\b\.?|[-#()/,.]|\b\d+\b", " ", br, flags=re.I)
     prov = str(b.get("province", ""))[:30]
+    prov = "Azad Kashmir" if "kashmir" in prov.lower() else prov
     if not bank or not br:
         raise HTTPException(400, "bank and branch are required")
     q = re.sub(r"\s+", " ", f"{bank} {br} branch {prov} Pakistan").strip()

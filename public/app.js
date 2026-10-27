@@ -169,7 +169,8 @@ async function run() {
   const sameName = cands.filter((c) => c.fx[1] === 1).length;
   const shared = cands.length;
   // Most promising first: name letters, then the father's name, then province and city.
-  const pre = (c) => c.fx[6] + c.fx[0] + c.fx[8] + 0.3 * c.fx[9] + (c.cityHit ? 0.5 : 0) + (c.cnic === 'match' ? 9 : 0);
+  // (-1 means "not on the record"; that must not rank below a father's name that differs)
+  const pre = (c) => c.fx[6] + c.fx[0] + Math.max(c.fx[8], 0) + 0.3 * Math.max(c.fx[9], 0) + (c.cityHit ? 0.5 : 0) + (c.cnic === 'match' ? 9 : 0);
   cands.sort((a, b) => pre(b) - pre(a));
   cands = cands.slice(0, 250);
   s3.done(`${shared.toLocaleString()} share a spelling${shared > 250 ? ' · closest 250 kept' : ''}${cnicOut ? ` · ${cnicOut} ruled out by CNIC` : ''}`);

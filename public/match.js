@@ -170,7 +170,16 @@ const jacc = (a, b) => {
 export const FEATURES = ['own_jacc', 'canon_jacc', 'rare_hits', 'rare_missing', 'row_extra', 'first_match', 'seq_sim',
   'father_known', 'father_sim', 'province_match', 'len_diff', 'log_freq'];
 
+// The lists cut long names at the column width ("FAYAZ HUSSAI"): a last part that starts the
+// family's word (3+ letters) is that word.
+export function untruncate(rowToks, qToks) {
+  const last = rowToks[rowToks.length - 1];
+  if (last && last.length >= 3) for (const t of qToks) if (t !== last && t.startsWith(last)) return [...rowToks.slice(0, -1), t];
+  return rowToks;
+}
+
 export function features(qOwn, qFather, qProvince, rOwn, rFather, rProvince, rFreq) {
+  rFather = untruncate(rFather, qFather);
   const qs = qOwn.map(skeleton), rs = rOwn.map(skeleton);
   const qRare = new Set(qOwn.filter((t) => !COMMON.has(t)).map(skeleton));
   const rSet = new Set(rs);

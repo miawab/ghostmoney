@@ -2,13 +2,13 @@
  "all": {
   "Ctrl+F": 0.51,
   "Fuzzy text": 0.622,
-  "TabPFN": 0.768,
+  "TabPFN": 0.769,
   "queries": 2429
  },
  "father known on both sides": {
   "Ctrl+F": 0.624,
   "Fuzzy text": 0.729,
-  "TabPFN": 0.976,
+  "TabPFN": 0.988,
   "queries": 85
  },
  "no father's name": {

@@ -48,9 +48,14 @@ def main():
     lr = LogisticRegression(max_iter=2000).fit(X, y)
     preds["Logistic regression on features"] = lr.predict_proba(Xt)[:, 1] >= 0.5
 
-    from tabpfn import TabPFNClassifier
     t0 = time.time()
-    clf = TabPFNClassifier(device="cpu", n_estimators=4)
+    if os.environ.get("TABPFN_LOCAL"):
+        from tabpfn import TabPFNClassifier
+        clf = TabPFNClassifier(device="cpu", n_estimators=4)
+    else:  # the same hosted API the site uses
+        from tabpfn_client import TabPFNClassifier, set_access_token
+        set_access_token(os.environ["TABPFN_TOKEN"])
+        clf = TabPFNClassifier()
     clf.fit(X, y)
     prob = np.concatenate([clf.predict_proba(Xt[i:i + 1000])[:, 1] for i in range(0, len(Xt), 1000)])
     secs = time.time() - t0

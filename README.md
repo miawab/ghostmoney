@@ -22,7 +22,7 @@ Test set: 11,036 pairs of list rows, labelled by CNIC (same 13-digit CNIC = same
 | Fuzzy text match | 62% |
 | TabPFN on 12 numbers | 77% |
 
-When TabPFN scores a pair 0.9 or more, it is the same person 96% of the time (370 pairs). See `data/eval/` and `scripts/eval_matcher.py`, `scripts/eval_ranking.py`.
+When TabPFN scores a pair 0.9 or more, it is the same person 96% of the time (373 pairs). See `data/eval/` and `scripts/eval_matcher.py`, `scripts/eval_ranking.py`.
 
 ## Run it locally
 ```
