@@ -49,16 +49,16 @@ a { color: var(--marigold); }
 .pill.on::before { content: "● "; color: var(--ok); }
 
 main { max-width: 980px; margin: 0 auto; padding: 0 20px 40px; }
-.hero { padding: 36px 0 18px; }
+.hero { padding: 20px 0 6px; }
 .hero-ur { font-size: 26px; color: var(--marigold); margin: 0 0 4px; text-align: left; }
-h1 { font: 800 clamp(38px, 6.4vw, 66px)/1.04 var(--serif); margin: 0 0 18px; letter-spacing: -1px; }
+h1 { font: 800 clamp(36px, 5.6vw, 58px)/1.04 var(--serif); margin: 0 0 18px; letter-spacing: -1px; }
 h1 em { font-style: italic; color: var(--marigold); text-shadow: 0 0 28px rgba(245, 165, 36, .45); }
 .lede { font-size: 19px; color: #e6d9e3; max-width: 680px; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 28px 0 8px; }
-.stats div { background: linear-gradient(180deg, rgba(255,255,255,.04), transparent); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-.stats dd { margin: 0; font: 800 30px var(--serif); color: var(--marigold); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0 0; padding-top: 16px; border-top: 1px dashed var(--line); }
+.stats div { padding: 0; }
+.stats dd { margin: 0; font: 800 24px var(--serif); color: var(--marigold); }
 .stats dt { color: var(--muted); font-size: 14px; order: 2; }
-.stats div { display: flex; flex-direction: column-reverse; }
+
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin: 22px 0; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
 h2 { font: 600 26px var(--serif); margin: 0 0 14px; }
@@ -155,10 +155,33 @@ footer { max-width: 980px; margin: 0 auto; padding: 20px; color: var(--muted); f
 @media (max-width: 760px) {
   body { font-size: 16px; }
   main { padding: 0 16px 30px; }
-  .stats { grid-template-columns: 1fr; }
   .row2 { grid-template-columns: 1fr; }
   .how-grid { grid-template-columns: 1fr 1fr; }
   .card { padding: 18px; }
   .acct-head { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+/* trust points, three-step path, hints */
+.trust { list-style: none; padding: 0; margin: 18px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.trust li { position: relative; padding: 12px 14px 12px 38px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.03); font-size: 15px; color: #e6d9e3; }
+.trust li::before { content: ""; position: absolute; left: 14px; top: 16px; width: 12px; height: 12px; border-radius: 50%; background: var(--marigold); box-shadow: 0 0 12px rgba(245,165,36,.7); }
+.trust b { color: var(--paper); }
+.tip { display: block; margin-top: 6px; color: var(--muted); font-size: 13.5px; font-weight: 400; }
+.tip::before { content: "✦ "; color: var(--marigold); }
+.try { margin: 14px 0 0; color: var(--muted); font-size: 14.5px; }
+button.link { background: none; border: 0; padding: 0; font: inherit; color: var(--marigold); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+button.link:hover { color: var(--paper); }
+.path { list-style: none; counter-reset: s; padding: 0; margin: 6px 0 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.path li { counter-increment: s; position: relative; padding: 0 16px 0 46px; color: var(--muted); font-size: 15px; }
+.path li::before { content: counter(s); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 800 16px var(--serif); color: var(--night); background: var(--marigold); }
+.path li b { display: block; color: var(--paper); font: 700 18px var(--serif); }
+@media (max-width: 760px) {
+  .trust, .path { grid-template-columns: 1fr; }
+  .brand { white-space: nowrap; font-size: 18px; }
+  .pill { font-size: 12px; padding: 6px 10px; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .path li { padding-bottom: 14px; }
+  .stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .stats dd { font-size: 18px; }
+  .stats dt { font-size: 12px; }
+}

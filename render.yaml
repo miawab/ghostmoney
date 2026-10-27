@@ -12,6 +12,10 @@ services:
         value: 0.0.0.0
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: INDEX_TAG
+        value: demo-v1
+      - key: INDEX_FILE
+        value: ghostmoney-index-2023-2024-2025.tar
       - key: TABPFN_TOKEN
         sync: false
       - key: SERPAPI_KEY

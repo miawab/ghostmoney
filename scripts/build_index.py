@@ -7,7 +7,7 @@ number shared by thousands of names, never the name itself.
 CNICs are not shipped whole: a shard row carries the last 4 digits and a short hash, so the page can
 confirm a CNIC the family types in without publishing every number again.
 
-usage: python -I scripts/build_index.py
+usage: python -I scripts/build_index.py [years...]   (e.g. 2023 2024 2025 for a smaller demo index)
 """
 import csv, glob, gzip, hashlib, io, json, os, sys, tarfile, zlib
 from collections import defaultdict
@@ -20,6 +20,7 @@ from gm.banks import canonical  # noqa: E402
 csv.field_size_limit(10_000_000)
 SHARDS = 4096
 OUT = os.path.join(ROOT, "data", "index", "site")
+YEARS = sys.argv[1:]
 PLACEHOLDER = {"PAY ORDER", "UNAVAILABLE", "CD MISC", "NA", "N A", "UNKNOWN", "NOT AVAILABLE", "DEMAND DRAFT", "CALL DEPOSIT"}
 
 
@@ -36,6 +37,8 @@ def walk(stats):
     seen = set()
     for path in sorted(glob.glob(os.path.join(ROOT, "data", "index", "rows-*.csv.gz"))):
         year = os.path.basename(path)[5:9]
+        if YEARS and year not in YEARS:
+            continue
         ycount = [0, 0.0]
         with gzip.open(path, "rt", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -127,7 +130,7 @@ def main():
     stats["by_bank"] = {k: v for k, v in sorted(stats["by_bank"].items(), key=lambda x: -x[1][1])}
     # Written straight into the release tar (site/shards/<n>.json.gz + site/stats.json);
     # scripts/fetch_index.py unpacks it into data/index/.
-    tar_path = os.path.join(ROOT, "data", "ghostmoney-index.tar")
+    tar_path = os.path.join(ROOT, "data", "ghostmoney-index-" + "-".join(YEARS) + ".tar" if YEARS else "ghostmoney-index.tar")
     size = 0
     with tarfile.open(tar_path + ".part", "w") as tar:
         for s in range(SHARDS):
@@ -139,8 +142,9 @@ def main():
         stats["index_mb"] = round(size / 1e6, 1)
         add(tar, "site/stats.json", json.dumps(stats, indent=1).encode())
     os.replace(tar_path + ".part", tar_path)
-    os.makedirs(OUT, exist_ok=True)
-    json.dump(stats, open(os.path.join(OUT, "stats.json"), "w"), indent=1)
+    if not YEARS:  # a partial build lives only in its archive; leave the local full index alone
+        os.makedirs(OUT, exist_ok=True)
+        json.dump(stats, open(os.path.join(OUT, "stats.json"), "w"), indent=1)
     print(json.dumps({k: v for k, v in stats.items() if k not in ("by_bank", "by_year")}, indent=1))
 
 

@@ -9,7 +9,8 @@ import os, sys, tarfile, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAG = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("INDEX_TAG", "index-v1")
-URL = f"https://github.com/miawab/ghostmoney/releases/download/{TAG}/ghostmoney-index.tar"
+FILE = os.environ.get("INDEX_FILE", "ghostmoney-index.tar")
+URL = f"https://github.com/miawab/ghostmoney/releases/download/{TAG}/{FILE}"
 
 
 def main():

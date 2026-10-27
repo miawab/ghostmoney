@@ -25,12 +25,12 @@
   <section class="hero">
     <p class="urdu hero-ur" lang="ur" dir="rtl">جو وہ پیچھے چھوڑ گئے</p>
     <h1>Find what your elders <em>left behind</em>.</h1>
-    <p class="lede">When a bank account sits untouched for years, the bank hands the money to the State Bank of Pakistan, which publishes the names. Most families never look. Ghost Money searches every list from 2003 to 2025 for someone you've lost, however the clerk spelled their name.</p>
-    <dl class="stats" id="stats">
-      <div><dt>forgotten accounts of people</dt><dd id="sPeople">…</dd></div>
-      <div><dt>listed in their names since 2003</dt><dd id="sMoney">…</dd></div>
-      <div><dt>yearly lists searched</dt><dd id="sYears">…</dd></div>
-    </dl>
+    <p class="lede">When a bank account sits untouched for years, the bank hands the money to the State Bank of Pakistan, which publishes the names. Most families never look. Search every list from <span class="yrs">2003 to 2025</span> for someone you've lost, however the clerk spelled their name.</p>
+    <ul class="trust">
+      <li><b>Free, no sign-up.</b> Nothing to install.</li>
+      <li><b>Private.</b> The name you type stays on this device.</li>
+      <li><b>No agent needed.</b> Heirs claim at the bank themselves. Ghost Money never asks for money, bank logins or codes.</li>
+    </ul>
   </section>
 
   <section class="card search" aria-labelledby="searchTitle">
@@ -43,7 +43,8 @@
     <form id="form" autocomplete="off">
       <div class="panel" data-panel="form">
         <label>Their name <span class="hint">in English or اردو, as on their CNIC if you know it</span>
-          <input name="name" id="fName" required placeholder="e.g. Ghulam Rasool" maxlength="80"></label>
+          <input name="name" id="fName" required placeholder="e.g. Ghulam Rasool" maxlength="80">
+          <span class="tip">Spelling doesn't have to match: Rasool, Rasul and رسول are found together.</span></label>
         <div class="row2">
           <label>Father's or husband's name <span class="hint">optional</span>
             <input name="father" id="fFather" placeholder="e.g. Allah Ditta" maxlength="80"></label>
@@ -62,8 +63,20 @@
         <button class="go" type="submit" id="goBtn"><span>Search the lists</span></button>
         <p class="privacy">The name never leaves your browser. The page downloads small pieces of the index that thousands of names share, and matches them here.</p>
       </div>
+      <p class="try">Just looking? Try <button type="button" class="link" data-try="Ghulam Rasool|Allah Ditta|Sahiwal">Ghulam Rasool, son of Allah Ditta</button>, one of Pakistan's most common names.</p>
     </form>
+    <dl class="stats" id="stats">
+      <div><dd id="sPeople">…</dd><dt>accounts in people's names</dt></div>
+      <div><dd id="sMoney">…</dd><dt>listed in their names since <span class="y0">2003</span></dt></div>
+      <div><dd id="sYears">…</dd><dt>of State Bank lists</dt></div>
+    </dl>
   </section>
+
+  <ol class="path" aria-label="Three steps">
+    <li><b>Search</b> every list at once, in English or Urdu.</li>
+    <li><b>Check</b> the match: father's name, city, CNIC.</li>
+    <li><b>Claim</b> at the bank's branch, with the letter ready.</li>
+  </ol>
 
   <section id="run" class="card run" hidden aria-live="polite">
     <h2>Searching</h2>
@@ -96,7 +109,7 @@
   </section>
 
   <section class="how">
-    <h2>How it works</h2>
+    <h2>Under the hood</h2>
     <div class="how-grid">
       <div><h3>The lists</h3><p>782 Excel and CSV files from the State Bank, one per bank per year, cleaned into one index. Rows shared by a CNIC show the same person written many ways.</p></div>
       <div><h3>Your device</h3><p>Your browser works out the spelling keys for the name (RASOOL, RASUL and رسول all become RSL), downloads only those pieces, and compares every row there.</p></div>

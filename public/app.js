@@ -30,7 +30,11 @@ const statsReady = fetch('stats.json').then((r) => r.json()).then((s) => {
   indexVer = String(s.rows || '');
   $('#sPeople').textContent = (s.people / 1e6).toFixed(2) + ' million';
   $('#sMoney').textContent = 'Rs ' + (s.pkr_people / 1e9).toFixed(1) + ' billion';
-  $('#sYears').textContent = Object.keys(s.by_year).length + ' years';
+  const ys = Object.keys(s.by_year).sort();
+  $('#sYears').textContent = ys.length + (ys.length > 1 ? ' years' : ' year');
+  document.querySelectorAll('.yrs').forEach((e) => { e.textContent = `${ys[0]} to ${ys[ys.length - 1]}`; });
+  document.querySelectorAll('.y0').forEach((e) => { e.textContent = ys[0]; });
+  $('#sMoney').title = 'as listed; some has been claimed since';
 }).catch(() => {});
 
 // ---- Gemma status ----
@@ -77,6 +81,14 @@ function step(who, text) {
 
 // ---- search ----
 let last = null;
+// "Just looking?" fills the form with a common name and runs it
+document.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => {
+  const [n, f, c] = b.dataset.try.split('|');
+  $('#tabForm').click();
+  $('#fName').value = n; $('#fFather').value = f; $('#fCity').value = c; $('#fCnic').value = '';
+  $('#form').requestSubmit();
+}));
+
 $('#form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('#goBtn');
