@@ -364,6 +364,39 @@ const Proof = () => (
 );
 const PROOF_LEN = s(6);
 
+// Stills for the post: npx remotion still src/index.ts Cover out/cover.png
+export const Cover: React.FC = () => (
+  <Land dim={0.42}>
+    <Ancestor x={1540} y={600} size={1.35} kind="dada" />
+    <div style={{ position: "absolute", left: 90, top: 200 }}>
+      <BigText size={150} style={{ textAlign: "left" }}>Ghost Money</BigText>
+      <div style={{ fontFamily: FONT, fontWeight: 700, color: PAPER, fontSize: 60, marginTop: 30 }}>Find what your elders left behind.</div>
+      <div style={{ fontFamily: FONT, fontWeight: 700, color: GOLD, fontSize: 60, marginTop: 24 }}>Rs 50.7 billion in people's names</div>
+    </div>
+  </Land>
+);
+
+export const Chart: React.FC = () => {
+  const bar = (label: string, pct: number, color: string, y: number) => (
+    <div style={{ position: "absolute", left: 100, top: y, width: 1400 }}>
+      <div style={{ fontFamily: FONT, fontWeight: 700, fontSize: 44, color: PAPER, marginBottom: 10 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        <div style={{ height: 80, width: `${pct * 0.85}%`, background: color, borderRadius: 14 }} />
+        <div style={{ fontFamily: DISPLAY, fontSize: 72, color }}>{pct}%</div>
+      </div>
+    </div>
+  );
+  return (
+    <Night>
+      <div style={{ position: "absolute", left: 100, top: 50, fontFamily: DISPLAY, fontSize: 56, color: GOLD }}>Right account ranked first</div>
+      {bar("Ctrl+F", 51, MUTED, 160)}
+      {bar("Fuzzy text match", 62, ROSE, 320)}
+      {bar("TabPFN on 12 numbers", 77, MARIGOLD, 480)}
+      {bar("TabPFN, father's name on both records (85 searches)", 99, TEAL, 640)}
+    </Night>
+  );
+};
+
 const SCENES: Record<string, React.FC> = { s1: S1, s2: S2, s3: S3, s4: S4, s5: S5, s6: S6, s7: S7, s8: S8, s9: S9, s10: S10, s11: S11, s12: S12, s13: S13 };
 
 export const Main: React.FC = () => {
