@@ -29,7 +29,7 @@ const M = marks as any;
 
 // Scene lengths: the narration plus a little room. s11 also plays the real Urdu voice summary.
 const UR_LEN = 4; // a taste of it: the judges read English
-const EXTRA: Record<string, number> = { s1: 1.2, s2: 0.8, s3: 2, s4: 1.2, s5: 1, s6: 1.2, s7: 1, s8: 1, s9: 1, s10: 1, s11: UR_LEN + 1, s12: 1.4, s13: 3 };
+const EXTRA: Record<string, number> = { s1: 1.2, s2: 0.8, s3: 2, s4: 1.2, s5: 1, s6: 1.2, s7: 1, s8: 1, s9: 1, s10: 1.7, s11: UR_LEN + 1, s12: 1.4, s13: 3 };
 const ORDER = ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13"];
 const LEN = (k: string) => s(vo[k] + EXTRA[k]);
 export const TOTAL = ORDER.reduce((a, k) => a + LEN(k), 0) + 180;
@@ -102,40 +102,35 @@ const Night: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <AbsoluteFill style={{ background: `radial-gradient(1200px 700px at 50% 40%, #33187f, ${NIGHT})`, fontFamily: FONT }}>{children}</AbsoluteFill>
 );
 
-// The ancestor: a big sugar skull whose eyes can look around.
-const Skull: React.FC<{ x: number; y: number; size?: number; look?: number; wink?: boolean }> = ({ x, y, size = 1, look = 0, wink }) => {
+// The ancestors: friendly round ghosts, each with a marigold garland.
+const Ancestor: React.FC<{ x: number; y: number; size?: number; look?: number; wink?: boolean; kind?: "dada" | "dadi" | "chacha" }> = ({ x, y, size = 1, look = 0, wink, kind = "dada" }) => {
   const f = useCurrentFrame();
-  const bob = Math.sin(f / 10) * 6;
-  const eye = (cx: number, closed: boolean) => (
-    <g>
-      {Array.from({ length: 8 }).map((_, i) => {
-        const a = (i * Math.PI) / 4;
-        return <circle key={i} cx={cx + Math.cos(a) * 42} cy={210 + Math.sin(a) * 42} r={15} fill={MARIGOLD} />;
-      })}
-      {closed
-        ? <path d={`M${cx - 26} 212 q26 -22 52 0`} stroke={CARD} strokeWidth={10} fill="none" strokeLinecap="round" />
-        : <><circle cx={cx} cy={210} r={32} fill="#fff" /><circle cx={cx + look * 18} cy={210} r={17} fill={CARD} /></>}
-    </g>
-  );
+  const bob = Math.sin(f / 10 + x) * 8;
+  const eye = (cx: number, closed: boolean) => closed
+    ? <path d={`M${cx - 24} 186 q24 -24 48 0`} stroke={CARD} strokeWidth={10} fill="none" strokeLinecap="round" />
+    : <><circle cx={cx} cy={180} r={30} fill="#fff" stroke={CARD} strokeWidth={5} /><circle cx={cx + look * 14} cy={180} r={17} fill={CARD} /></>;
   return (
     <svg style={{ position: "absolute", left: x - 200 * size, top: y - 210 * size + bob, overflow: "visible" }} width={400 * size} height={420 * size} viewBox="0 0 400 420">
-      <path d="M200 20C100 20 36 92 36 186c0 58 30 104 74 130v48a18 18 0 0 0 18 18h144a18 18 0 0 0 18-18v-48c44-26 74-72 74-130C364 92 300 20 200 20z" fill={PAPER} />
+      <path d="M60 400V180a140 140 0 0 1 280 0V400q-35-40-70 0q-35 40-70 0q-35-40-70 0q-35 40-70 0z" fill={PAPER} />
+      {kind === "dadi" && <path d="M60 180a140 140 0 0 1 280 0v30q-20-120-140-120t-140 120z" fill={ROSE} />}
+      {kind === "dada" && <path d="M120 66q80-50 160 0v-34q-80-34-160 0z" fill={TEAL} />}
+      {eye(150, false)}
+      {eye(250, !!wink)}
+      {kind === "chacha" && <path d="M180 180h40M120 180a30 30 0 0 1 60 0a30 30 0 0 1-60 0zM220 180a30 30 0 0 1 60 0a30 30 0 0 1-60 0z" fill="none" stroke={ROSE} strokeWidth={8} />}
+      <circle cx={112} cy={232} r={20} fill={ROSE} opacity={0.35} />
+      <circle cx={288} cy={232} r={20} fill={ROSE} opacity={0.35} />
+      <path d="M160 240q40 40 80 0" stroke={CARD} strokeWidth={10} fill="none" strokeLinecap="round" />
+      {kind === "dada" && <path d="M200 226q-30-16-52 6q28 8 52-6q30-16 52 6q-28 8-52-6z" fill={CARD} />}
       {Array.from({ length: 9 }).map((_, i) => {
-        const a = Math.PI + (i * Math.PI) / 8;
-        return <circle key={i} cx={200 + Math.cos(a) * 138} cy={190 + Math.sin(a) * 138} r={10} fill={i % 2 ? ROSE : TEAL} />;
+        const a = Math.PI * (0.12 + (i * 0.76) / 8);
+        return <circle key={i} cx={200 + Math.cos(a) * 150} cy={190 + Math.sin(a) * 150} r={17} fill={i % 2 ? MARIGOLD : GOLD} />;
       })}
-      {eye(128, false)}
-      {eye(272, !!wink)}
-      <path d="M200 262l24 42h-48z" fill={ROSE} />
-      <path d="M152 336v44M200 336v44M248 336v44" stroke={CARD} strokeWidth={10} />
-      <circle cx={200} cy={92} r={32} fill={MARIGOLD} />
-      <text x={200} y={108} fontFamily="Arial" fontWeight={700} fontSize={42} textAnchor="middle" fill={CARD}>Rs</text>
     </svg>
   );
 };
 
-const Bubble: React.FC<{ at: number; until?: number; x: number; y: number; color?: string; ink?: string; size?: number; children: React.ReactNode }> = ({ at, until, x, y, color = PAPER, ink = CARD, size = 64, children }) => (
-  <Pop at={at} until={until} style={{ position: "absolute", left: x, top: y }}>
+const Bubble: React.FC<{ at: number; until?: number; x?: number; right?: number; y: number; color?: string; ink?: string; size?: number; children: React.ReactNode }> = ({ at, until, x, right, y, color = PAPER, ink = CARD, size = 64, children }) => (
+  <Pop at={at} until={until} style={{ position: "absolute", left: x, right, top: y }}>
     <div style={{ background: color, color: ink, fontFamily: DISPLAY, fontSize: size, padding: "26px 44px", borderRadius: 44, boxShadow: "0 12px 40px rgba(0,0,0,.4)", whiteSpace: "nowrap" }}>{children}</div>
   </Pop>
 );
@@ -144,24 +139,39 @@ const BigText: React.FC<{ children: React.ReactNode; size?: number; color?: stri
   <div style={{ fontFamily: DISPLAY, fontSize: size, color, textShadow: `0 8px 0 ${shadow}`, textAlign: "center", lineHeight: 1.1, ...style }}>{children}</div>
 );
 
-// Real footage, played from one recording, zooming on a box of the page.
-const Footage: React.FC<{ from: number; to: number; id: string; box?: { x: number; y: number; width: number; height: number }; zoomAt?: number; maxZoom?: number }> = ({ from, to, id, box, zoomAt = 0, maxZoom = 1.9 }) => {
+// Real footage from one recording: a list of clips, each with its own speed and zoom.
+// A box is only true once the page has scrolled to it, so a clip starts where its box is on screen.
+type Box = { x: number; y: number; width: number; height: number };
+type Clip = { from: number; to: number; sec?: number; box?: Box; maxZoom?: number; ease?: boolean };
+
+const Shot: React.FC<Clip & { frames: number }> = ({ from, to, frames, box, maxZoom = 1.9, ease }) => {
   const f = useCurrentFrame();
-  const len = LEN(id);
-  const rate = (to - from) / (len / FPS);
   let scale = 1, tx = 0, ty = 0;
   if (box) {
     const target = Math.min(maxZoom, 1800 / box.width, 960 / box.height);
-    const p = interpolate(f, [zoomAt, zoomAt + 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    const p = ease ? interpolate(f, [0, 18], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1;
     scale = 1 + (target - 1) * p;
     tx = (960 - (box.x + box.width / 2)) * p;
     ty = (540 - (box.y + box.height / 2)) * p;
   }
   return (
+    <AbsoluteFill style={{ transform: `scale(${scale}) translate(${tx}px, ${ty}px)`, transformOrigin: "50% 50%" }}>
+      <OffthreadVideo src={staticFile("footage.webm")} startFrom={Math.round(from * FPS)} playbackRate={(to - from) / (frames / FPS)} muted style={{ width: "100%", height: "100%" }} />
+    </AbsoluteFill>
+  );
+};
+
+// The last clip takes whatever time is left in the scene.
+const Footage: React.FC<{ id: string; clips: Clip[] }> = ({ id, clips }) => {
+  let at = 0;
+  return (
     <AbsoluteFill style={{ background: NIGHT, overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `scale(${scale}) translate(${tx}px, ${ty}px)`, transformOrigin: "50% 50%" }}>
-        <OffthreadVideo src={staticFile("footage.webm")} startFrom={Math.round(from * FPS)} playbackRate={rate} muted style={{ width: "100%", height: "100%" }} />
-      </AbsoluteFill>
+      {clips.map((c, i) => {
+        const frames = c.sec === undefined ? LEN(id) - at : s(c.sec);
+        const start = at;
+        at += frames;
+        return <Sequence key={i} from={start} durationInFrames={frames}><Shot {...c} frames={frames} /></Sequence>;
+      })}
     </AbsoluteFill>
   );
 };
@@ -170,16 +180,19 @@ const Footage: React.FC<{ from: number; to: number; id: string; box?: { x: numbe
 
 const S1 = () => (
   <Land>
-    <Pop at={18} style={{ position: "absolute", top: 240, width: "100%" }}><BigText size={120}>Say you could visit.</BigText></Pop>
+    <Pop at={12} style={{ position: "absolute", top: 170, width: "100%" }}><BigText size={100}>One night. Whole family.</BigText></Pop>
+    <Pop at={s(1.6)} style={{ position: "absolute", inset: 0 }}><Ancestor x={480} y={620} size={0.95} kind="dadi" /></Pop>
+    <Pop at={s(2.2)} style={{ position: "absolute", inset: 0 }}><Ancestor x={960} y={620} size={0.95} kind="dada" /></Pop>
+    <Pop at={s(2.8)} style={{ position: "absolute", inset: 0 }}><Ancestor x={1440} y={620} size={0.95} kind="chacha" /></Pop>
   </Land>
 );
 
 const S2 = () => (
-  <Land dim={0.25}>
-    <Skull x={960} y={600} size={1.15} look={Math.sin(useCurrentFrame() / 18)} />
-    <Bubble at={s(1.8)} until={s(3.4)} x={150} y={300}>You've gotten so thin.</Bubble>
-    <Bubble at={s(3.2)} until={s(4.5)} x={1200} y={300} color={TEAL}>Eat something.</Bubble>
-    <Bubble at={s(4.3)} x={1150} y={620} color={MARIGOLD}>When's the wedding?</Bubble>
+  <Land dim={0.15}>
+    <Ancestor x={340} y={560} size={1.15} kind="dadi" look={Math.sin(useCurrentFrame() / 18)} />
+    <Bubble at={s(1.8)} right={90} y={190}>You've gotten so thin.</Bubble>
+    <Bubble at={s(3.2)} right={90} y={410} color={TEAL}>Eat something.</Bubble>
+    <Bubble at={s(4.3)} right={90} y={630} color={MARIGOLD}>When's the wedding?</Bubble>
   </Land>
 );
 
@@ -188,8 +201,8 @@ const S3 = () => {
   const asked = s(vo.s3 - 2);
   const look = f < asked + 12 ? 0 : Math.sign(Math.sin((f - asked) / 8));
   return (
-    <Land dim={0.25}>
-      <Skull x={1280} y={560} size={1.15} look={look} />
+    <Land dim={0.15}>
+      <Ancestor x={1420} y={560} size={1.15} kind="dada" look={look} />
       <Bubble at={asked - 12} x={110} y={330} color={ROSE} ink={PAPER} size={68}>Did you leave any<br />hidden treasure?</Bubble>
     </Land>
   );
@@ -260,10 +273,21 @@ const S6 = () => {
   );
 };
 
-const S7 = () => <Footage id="s7" from={M.home} to={M.go} box={M.privacyBox} zoomAt={s(vo.s7 - 2.6)} />;
-const S8 = () => <Footage id="s8" from={M.go} to={M.results} box={M.runBox} zoomAt={s(0.6)} maxZoom={1.5} />;
-const S9 = () => <Footage id="s9" from={M.summary} to={M.card} box={M.summaryBox} zoomAt={8} />;
-const S10 = () => <Footage id="s10" from={M.card} to={M.listen} box={{ x: 372, y: 120, width: 1175, height: 780 }} zoomAt={0} maxZoom={1.4} />;
+// Times read off the footage: the page scrolls to the steps 2.4s after "go".
+const STEPS_ON_SCREEN = M.go + 2.4;
+const BRANCH_CENTERED = M.letterClick - 2.5;
+const LETTER_WRITTEN = M.letter - 0.2;
+const CARD_TOP = { x: 372, y: 0, width: 1175, height: 780 };
+const MIDDLE = { x: 372, y: 150, width: 1175, height: 780 };
+
+const S7 = () => <Footage id="s7" clips={[{ from: M.home, to: M.privacy - 0.25, sec: 2.7 }, { from: M.privacy - 0.25, to: M.go, box: { ...M.privacyBox, x: 372, width: 1175 }, maxZoom: 1.5, ease: true }]} />;
+const S8 = () => <Footage id="s8" clips={[{ from: M.go, to: STEPS_ON_SCREEN, sec: 1.6 }, { from: STEPS_ON_SCREEN, to: M.results, box: M.runBox, maxZoom: 1.5, ease: true }]} />;
+const S9 = () => <Footage id="s9" clips={[{ from: M.summary, to: M.card, box: M.summaryBox, ease: true }]} />;
+const S10 = () => <Footage id="s10" clips={[
+  { from: M.card, to: BRANCH_CENTERED, sec: 2.6, box: CARD_TOP, maxZoom: 1.3 },
+  { from: BRANCH_CENTERED, to: M.letterClick + 0.6, sec: 1.4, box: MIDDLE, maxZoom: 1.3 },
+  { from: LETTER_WRITTEN, to: M.listen - 1, box: MIDDLE, maxZoom: 1.3 },
+]} />;
 
 const S11 = () => {
   const f = useCurrentFrame();
@@ -315,7 +339,7 @@ const S13 = () => {
   const end = s(vo.s13 + 0.4);
   return (
     <Land dim={0.2}>
-      <Skull x={960} y={660} size={0.95} wink={f > s(vo.s13 - 0.6) && f < s(vo.s13 + 0.4)} />
+      <Ancestor x={960} y={680} size={0.95} kind="dada" wink={f > s(vo.s13 - 0.6) && f < s(vo.s13 + 0.4)} />
       <Pop at={end} style={{ position: "absolute", top: 130, width: "100%" }}><BigText size={130}>Ghost Money</BigText></Pop>
       <Pop at={end + 12} style={{ position: "absolute", top: 300, width: "100%" }}>
         <div style={{ fontFamily: FONT, fontWeight: 700, color: PAPER, fontSize: 60, textAlign: "center" }}>Find what your elders left behind.</div>
