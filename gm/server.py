@@ -208,7 +208,8 @@ async def voice(req: Request):
             r = httpx.post(f"https://api.elevenlabs.io/v1/text-to-speech/{os.environ.get('ELEVENLABS_VOICE_ID', 'JBFqnCBsd6RMkjVDRZzb')}"
                            "?output_format=mp3_44100_64", timeout=60,
                            headers={"xi-api-key": os.environ["ELEVENLABS_API_KEY"], "Content-Type": "application/json"},
-                           json={"text": text, "model_id": os.environ.get("ELEVENLABS_MODEL", "eleven_flash_v2_5"),
+                           # flash and turbo refuse Urdu; v3 takes it
+                           json={"text": text, "model_id": "eleven_v3" if lang == "ur" else os.environ.get("ELEVENLABS_MODEL", "eleven_flash_v2_5"),
                                  **({"language_code": "ur"} if lang == "ur" else {})})
             if r.status_code != 200:
                 raise HTTPException(502, f"ElevenLabs said {r.status_code}")

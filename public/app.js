@@ -275,7 +275,7 @@ function card(c, q, crowd = 0, twins = 0) {
   el.querySelector('.amt').textContent = c.a ? fmt(c.a) : '';
   el.querySelector('.meter span').style.width = Math.round(c.p * 100) + '%';
   el.querySelector('.meter').setAttribute('aria-label', `match ${Math.round(c.p * 100)} percent`);
-  el.querySelector('.verdict').textContent = `${words}${words.startsWith('Same name') ? '' : ` · ${Math.round(c.p * 100)}%`}${c.cityHit ? ` · branch in ${q.city}` : ''}${c.fatherDiffers ? ' · father\'s name differs' : ''}`;
+  el.querySelector('.verdict').textContent = `${words}${words.startsWith('Same name') ? '' : ` · ${Math.round(c.p * 100)}%`}${c.cityHit ? ` · ${q.city} on record` : ''}${c.fatherDiffers ? ' · father\'s name differs' : ''}`;
   const cnic = c.cnic === 'match' ? '<span class="badge ok">CNIC matches</span>' : c.cnic === 'none' ? '<span class="badge na">no CNIC in list</span>' : c.c4 ? `<span class="badge na">ends ${esc(c.c4)}</span>` : '<span class="badge na">not listed</span>';
   const facts = [['Listed by SBP', c.y], ['Last activity', c.la || 'not given'], ['Account', c.ac ? 'ending ' + c.ac : c.in || '—'], ['Type', c.k || c.in || '—'], ['CNIC', cnic]];
   if (c.f && c.f.length) facts.push(['Father / husband', c.rel ? c.rel + ' ' + c.f.join(' ') : c.f.join(' ')]);
@@ -295,6 +295,10 @@ async function whereToClaim(c, el) {
   const x = el.querySelector('.extra'); x.hidden = false;
   x.innerHTML = '<p class="hint">Looking up the branch…</p>';
   const now = c.now ? `<p><b>This bank has changed:</b> ${esc(c.b)} → ${esc(c.now)}. Go to the nearest branch of that bank. <a href="https://www.sbp.org.pk/notifications/bpd/index.htm" target="_blank" rel="noopener">State Bank merger notices</a></p>` : '';
+  if (!c.br) {
+    x.innerHTML = now + `<p>The list doesn't name a branch for this account. Call ${esc(c.now ? c.now.split(' (')[0] : c.b)}'s helpline with the account details above.</p>`;
+    return;
+  }
   try {
     const t0 = performance.now();
     const r = await fetch('api/branch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bank: c.now ? c.now.split(' (')[0] : c.b, branch: c.br, province: c.pr }) });
