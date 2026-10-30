@@ -17,3 +17,4 @@ video/out/
 data/*.tar
 data/*.tar.part
 data/*.log
+video/public/

@@ -1,0 +1,17 @@
+{
+  "name": "ghostmoney-video",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Main out/ghostmoney.mp4"
+  },
+  "dependencies": {
+    "@fontsource/chango": "^5.0.0",
+    "@fontsource/noto-nastaliq-urdu": "^5.0.0",
+    "@remotion/cli": "^4.0.535",
+    "playwright": "^1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.535"
+  }
+}

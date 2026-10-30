@@ -179,8 +179,12 @@ async def branch(req: Request):
 URDU_NUM = "۰۱۲۳۴۵۶۷۸۹"
 
 
-def voice_text(lang, found, total, banks):
+def voice_text(lang, found, total, banks, crowd=0):
     banks = [re.sub(r"[^\w\s()&.-]", "", str(x))[:40] for x in banks[:3]]
+    if crowd:  # a common name: many different people, so no total and no "could be theirs"
+        if lang == "ur":
+            return f"سرکاری فہرستوں میں اس نام کے {crowd:,} کھاتے ہیں، اور یہ الگ الگ لوگ ہو سکتے ہیں۔ شناختی کارڈ نمبر یا والد کے نام سے تصدیق کریں۔"
+        return f"The State Bank lists have {crowd:,} accounts under this name, and they may be different people. A CNIC or the father's name will settle it."
     if lang == "ur":
         if not found:
             return "سرکاری فہرستوں میں ابھی کوئی پکا نام نہیں ملا۔ ہجے بدل کر یا والد کے نام کے ساتھ دوبارہ تلاش کریں۔"
@@ -198,7 +202,8 @@ async def voice(req: Request):
     lang = "ur" if b.get("lang") == "ur" else "en"
     found = max(0, min(50, int(b.get("found") or 0)))
     total = max(0.0, min(1e10, float(b.get("total") or 0)))
-    text = voice_text(lang, found, total, list(b.get("banks") or []))
+    crowd = max(0, min(1000000, int(b.get("crowd") or 0)))
+    text = voice_text(lang, found, total, list(b.get("banks") or []), crowd)
     path = CACHE / f"voice-{hashlib.sha256(text.encode()).hexdigest()[:20]}.mp3"
     if not path.exists():
         if not os.environ.get("ELEVENLABS_API_KEY"):

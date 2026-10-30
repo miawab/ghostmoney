@@ -244,12 +244,13 @@ function show(q, cands, cnicOut, sameName = 0) {
   const fatherRows = strong.filter((c) => q.father && c.f?.length && !c.fatherDiffers && c.cnic !== 'match');
   const twins = new Set(fatherRows.map((c) => c.ch || c.i)).size > 2 ? fatherRows.length : 0;
   $('#summary').innerHTML = crowd
-    ? `<div class="big">${crowdN.toLocaleString()}</div><p><b>accounts belong to people named ${esc(q.name)}</b>, and the lists alone can't tell them apart. ${twins ? `${twins} of them are also listed with the father's name ${esc(q.father)}, under different CNICs.` : q.father ? 'Most rows have no father\'s name recorded.' : 'Adding the father\'s or husband\'s name helps.'} ${q.cnic ? '' : 'A CNIC settles it, if anyone has it saved. '}The closest are below; a branch in the city where they lived is the best clue.</p>`
+    ? `<div class="big">${crowdN.toLocaleString()}</div><p><b>accounts belong to people named ${esc(q.name)}</b>, and the lists alone can't tell them apart. ${twins ? `${twins} of them are also listed with the father's name ${esc(q.father)}, under different CNICs.` : q.father ? 'Most rows have no father\'s name recorded.' : 'Adding the father\'s or husband\'s name helps.'} ${q.cnic ? '' : 'A CNIC settles it, if anyone has it saved. '}The closest are below; a branch in the city where they lived is the best clue.</p>
+       <div class="listen"><button type="button" data-lang="ur" lang="ur">اردو میں سنیں</button><button type="button" data-lang="en">Listen</button></div>`
     : strong.length
     ? `<div class="big">${fmt(total)}</div><p><b>${strong.length} account${strong.length > 1 ? 's' : ''}</b> in the State Bank lists could be ${esc(q.name)}'s, at ${esc(banks.slice(0, 3).join(', '))}${banks.length > 3 ? ' and more' : ''}.${cnicOut ? ` ${cnicOut} rows with the name were ruled out by CNIC.` : ''}</p>
        <div class="listen"><button type="button" data-lang="ur" lang="ur">اردو میں سنیں</button><button type="button" data-lang="en">Listen</button></div>`
     : `<p class="empty">No strong match for ${esc(q.name)} in the lists${cnicOut ? ` (${cnicOut} rows with that name have a different CNIC)` : ''}. Try another spelling, add the father's name, or describe them to Gemma. Many families find nothing, which is good news too: nothing was lost.</p>`;
-  $('#summary').querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => listen(b.dataset.lang, strong.length, total, banks, b)));
+  $('#summary').querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => listen(b.dataset.lang, strong.length, total, banks, b, crowd ? crowdN : 0)));
   const box = $('#cards'); box.innerHTML = '';
   strong.slice(0, 12).forEach((c) => box.append(card(c, q, crowd && crowdN, twins)));
   $('#weaker').hidden = !weak.length;
@@ -350,10 +351,10 @@ Name: ____________   CNIC: ____________   Phone: ____________`;
   x.querySelector('.copy').addEventListener('click', () => navigator.clipboard.writeText(body));
 }
 
-async function listen(lang, found, total, banks, btn) {
+async function listen(lang, found, total, banks, btn, crowd = 0) {
   btn.disabled = true;
   try {
-    const r = await fetch('api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang, found, total, banks }) });
+    const r = await fetch('api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lang, found, total, banks, crowd }) });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || 'voice unavailable');
     new Audio(URL.createObjectURL(await r.blob())).play();
   } catch (e) { alertBox(e.message); }
